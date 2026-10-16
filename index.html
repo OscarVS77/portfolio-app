@@ -24,6 +24,16 @@ try{
   if(localStorage.getItem('portfolioOscar:lastWorkbook:v1') !== null)
     document.documentElement.setAttribute('data-arranque','recuperando');
 }catch(e){}
+/* v175.93 · #85 · «Has salido»: «Salir» borra lo del portfolio, deja esta marca de UN SOLO
+   USO en `sessionStorage` y recarga. Se lee y se quita aquí, antes de pintar, para que la
+   pantalla nazca vacía y no enseñe ni un instante lo de antes. La marca es la misma que
+   `MARCA_SALIDA`, en el bloque de Supabase: si una cambia, la otra tiene que cambiar con ella. */
+try{
+  if(sessionStorage.getItem('salida:portfolio') !== null){
+    sessionStorage.removeItem('salida:portfolio');
+    document.documentElement.setAttribute('data-salido','');
+  }
+}catch(e){}
 </script>
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
@@ -1692,7 +1702,7 @@ html{
   }
 }
 
-/* ══════════════════ HOJA CRÍTICA · INICIO · v175.90 · 05/10/2026 ══════════════════
+/* ══════════════════ HOJA CRÍTICA · INICIO · v175.93 · 16/10/2026 ══════════════════
    QUÉ ES. Una COPIA de las declaraciones ganadoras que gobiernan los elementos
    del documento —la raíz y el cuerpo incluidos, de donde cuelgan las
    variables—, con su selector y su contexto @ originales y EN ORDEN DE
@@ -1752,6 +1762,10 @@ html{
 
    SI SE TOCA UN BLOQUE DE ESTILO, ESTA HOJA CADUCA. `verify_critica` lo dice.
 
+   REGENERADA EN LA v175.93 (lote 3 + menú en la columna): el menú, el aviso del
+   libro, el título de página como texto, la ventana única y «Has salido» son
+   marcado nuevo del primer pintado, y sus estilos viven en el bloque del cuerpo.
+
    Y UN AVISO PARA QUIEN EDITE ESTE COMENTARIO: aquí no se escribe ningún nombre
    de etiqueta entre ángulos. `validate.py` cuenta el balance de etiquetas sobre
    el archivo ENTERO, comentarios de CSS incluidos, y un nombre suelto lo
@@ -1777,23 +1791,11 @@ html{
 .btcLivePulse{display:inline-block!important; width:7px!important; height:7px!important; border-radius:50%!important; background:var(--green)!important; margin-right:7px!important; vertical-align:middle!important;}
 .btcLivePulse.warn{background:var(--yellow)!important;}
 #dashboard .alertsCard .alert{grid-template-columns:minmax(120px,.85fr) minmax(0,1.15fr)!important; padding:12px 0!important;}
-.btn.primary, label.btn.primary, button.primary, .actions .btn.primary{background:linear-gradient(180deg,var(--active-yellow-hover),var(--active-yellow))!important; color:var(--ink-08)!important; border-color:var(--active-yellow-border)!important; box-shadow:var(--active-yellow-shadow)!important;}
+button.primary{background:linear-gradient(180deg,var(--active-yellow-hover),var(--active-yellow))!important; color:var(--ink-08)!important; border-color:var(--active-yellow-border)!important; box-shadow:var(--active-yellow-shadow)!important;}
 .nav button.active, .sidebar .nav button.active{background:linear-gradient(180deg,var(--active-yellow-hover),var(--active-yellow))!important; color:var(--ink-08)!important; border-color:var(--active-yellow-border)!important; box-shadow:var(--active-yellow-shadow)!important;}
 button.active{border-color:var(--active-yellow-border)!important;}
 .btn:not(.primary), .filterPill:not(.active), .nav button:not(.active){transition:background .16s ease,border-color .16s ease,color .16s ease,box-shadow .16s ease!important;}
 .cloudBtn[disabled]{opacity:.42; cursor:not-allowed!important;}
-.cloudOverlay{position:fixed; inset:0; z-index:9999; display:none; place-items:center; padding:24px; background:var(--blk-a22); backdrop-filter:blur(18px);}
-.cloudPanel{width:min(460px,100%); border:1px solid var(--line); border-radius:6px; background:linear-gradient(180deg,var(--veil-48),var(--veil-43)); box-shadow:0 34px 110px var(--blk-a21); padding:24px;}
-.cloudPanel h2{margin:0; font-size:24px; font-weight:620; letter-spacing:-.7px;}
-.cloudPanel p{margin:8px 0 18px; color:var(--muted); font-size:13px; line-height:1.4;}
-.cloudForm{display:grid; gap:10px;}
-.cloudForm input{width:100%; height:42px; border:1px solid var(--line); border-radius:6px; background:var(--ink-07); color:var(--text); padding:0 13px; font-size:13px; outline:none;}
-.cloudFormActions{display:flex; gap:10px; margin-top:4px;}
-.cloudFormActions .btn{flex:1;}
-.cloudStatusLine{margin-top:14px; color:var(--muted); font-size:12px; line-height:1.35;}
-@media (max-width: 680px){
-.cloudFormActions{flex-direction:column;}
-}
 #benchmarkChart{position:relative!important;}
 #benchmark .benchmarkTable td:nth-child(2){color:var(--text2)!important; font-weight:520!important;}
 #benchmark .benchmarkTable td:nth-child(3){font-variant-numeric:tabular-nums!important;}
@@ -1825,7 +1827,6 @@ html, body{overflow-x:clip!important; scrollbar-gutter:stable!important;}
 .app{overflow-x:clip!important; width:min(100%, var(--appMax))!important; max-width:var(--appMax)!important; margin:0 auto!important; padding:var(--appPad)!important; display:block!important; overflow:visible!important;}
 .sidebar{position:fixed!important; top:var(--appPad)!important; left:var(--leftRail)!important; width:var(--sideW)!important; height:calc(100vh - (var(--appPad) * 2))!important; z-index:50!important;}
 .main{margin-left:calc(var(--sideW) + var(--appGap))!important; width:calc(100% - var(--sideW) - var(--appGap))!important; min-width:0!important; overflow:visible!important;}
-.topbar{width:100%!important; margin:0 0 var(--topGap) 0!important; position:sticky!important; top:var(--appPad)!important; z-index:45!important;}
 .section, .section.active, .grid, .card, .capitalGrid, .hero, .alertsCard{min-width:0!important; max-width:100%!important;}
 .grid{gap:var(--contentGap)!important;}
 .section.active > .pageBlock:first-child, .section.active > .grid.pageBlock:first-child{margin-top:0!important;}
@@ -1843,7 +1844,6 @@ html, body{overflow-x:clip!important; scrollbar-gutter:stable!important;}
 @media (max-width: 1150px){
 :root{--appPad:12px!important; --appGap:0px!important; --topGap:16px!important;}
 .sidebar{margin-bottom:16px!important;}
-.topbar{margin-bottom:16px!important;}
 }
 .sideFoot{border-radius:0!important; left:28px!important; right:28px!important; bottom:26px!important; line-height:1.35!important;}
 .bGold{background:var(--gold)!important;}
@@ -1852,14 +1852,13 @@ html, body{background:var(--bg)!important;}
 body:before{content:""; position:fixed; inset:0; pointer-events:none; background:
     radial-gradient(circle at 18% 8%, var(--tint-warn-01), transparent 28%),
     radial-gradient(circle at 86% 18%, var(--tint-ok-01), transparent 24%); z-index:-1;}
-.sidebar, .topbar, .sourceBox, .tableWrap{border-color:var(--bone-a10)!important;}
+.sidebar, .sourceBox, .tableWrap{border-color:var(--bone-a10)!important;}
 .sidebar{background:linear-gradient(180deg,var(--veil-37),var(--veil-45))!important; box-shadow:0 28px 80px var(--blk-a19)!important;}
-.topbar{background:linear-gradient(180deg,var(--veil-38),var(--veil-33))!important;}
 .card:before, .kpi:before{background:linear-gradient(180deg,var(--bone-a03),transparent 28%)!important;}
 .sourceBox{background:var(--veil-05)!important;}
 .tableWrap .table th{background:var(--bone-a05)!important;}
 .tableWrap .table td, .alert{border-color:var(--bone-a05)!important;}
-.btn:not(.primary), .importStatus, .nav button:not(.active){background:var(--bone-a01)!important; border-color:var(--bone-a08)!important;}
+.btn:not(.primary), .nav button:not(.active){background:var(--bone-a01)!important; border-color:var(--bone-a08)!important;}
 .filterPill:not(.active), #movimientos .filterPill:not(.active), .benchmarkTabs button:not(.active){background:var(--panel3)!important; border:1px solid var(--line)!important;}
 .sideFoot{padding-left:0!important; padding-right:0!important;}
 .navStatus{box-shadow:none!important;}
@@ -2000,10 +1999,9 @@ body:before{content:""; position:fixed; inset:0; pointer-events:none; background
 .cardHeader p{margin-top:6px!important;}
 .capitalCard strong, .kpi strong{font-weight:480!important; font-variant-numeric:tabular-nums!important; letter-spacing:-.5px!important;}
 .kpi label, .dataStatusCard label{text-transform:uppercase!important; letter-spacing:.05em!important; font-weight:680!important;}
-.topbar{padding:14px 18px!important; border-radius:6px!important;}
 .pageTitle h1{font-size:25px!important; font-weight:720!important; letter-spacing:-.7px!important;}
 .assetTable td{border-color:var(--line)!important;}
-.btn.primary, label.btn.primary, .filterPill.active, .filterPills .filterPill.active, #movimientos .filterPill.active{background:var(--active-solid)!important; background-image:none!important; border-color:var(--active-solid)!important; color:var(--active-solid-ink)!important; box-shadow:0 8px 22px var(--tint-warn-06)!important;}
+.btn.primary, .filterPill.active, .filterPills .filterPill.active, #movimientos .filterPill.active{background:var(--active-solid)!important; background-image:none!important; border-color:var(--active-solid)!important; color:var(--active-solid-ink)!important; box-shadow:0 8px 22px var(--tint-warn-06)!important;}
 #auditoria .auditWebGrid{display:grid!important; grid-template-columns:repeat(5,minmax(0,1fr))!important; gap:var(--eje-auditoria-estado,12px)!important;}
 @media (min-width: 761px){
 #auditoria .auditWebGrid{--eje-auditoria-estado:16px;}
@@ -2059,7 +2057,7 @@ html, body{font-size:14.5px!important;}
 .nav button{font-size:13px!important;}
 .sideFoot{font-size:11.5px!important; color:var(--muted)!important;}
 .pageTitle p, .cardHeader p, .sourceBox, .kpiHeroNote, .auditWebHero p, .historyTop p{font-size:12.5px!important; line-height:1.42!important; color:var(--muted)!important;}
-.btn, label.btn, .importStatus{font-size:12.5px!important;}
+.btn{font-size:12.5px!important;}
 .kpi label, .capitalCard label, .heroMetric label, .dataStatusCard label, .auditWebState span, .auditWebCard span{font-size:12px!important; color:var(--muted)!important;}
 .kpi small, .heroMetric small, .dataStatusCard small, .auditWebState em, .auditWebCard em, .yearPills button span{font-size:12px!important; line-height:1.38!important; color:var(--muted)!important;}
 .tableWrap .table th, .assetTable th, .annualTable th{font-size:12px!important; color:var(--muted)!important;}
@@ -2071,7 +2069,6 @@ html, body{font-size:14.5px!important;}
 html, body{font-size:15px!important;}
 .pageTitle p, .cardHeader p, .sourceBox, .kpiHeroNote{font-size:13px!important;}
 .btn, .nav button{font-size:13px!important;}
-.topbar .actions .btn, .topbar .actions label.btn, .topbar .actions .importStatus{font-size:13px!important;}
 .kpi small{font-size:12px!important;}
 }
 .sidebar .sideUpdate .brandDate{font-size:11.5px!important;}
@@ -2113,13 +2110,7 @@ html, body{overflow-x:clip!important;}
 .sideFoot.sideUpdate .brandDate{display:block!important; margin:0!important; font-size:12px!important; color:var(--muted)!important; text-align:left!important; max-width:none!important;}
 .main{display:flex!important; flex-direction:column!important; margin-left:0!important; width:100%!important;}
 .main > .section{order:1;}
-.topbar{position:relative!important; top:auto!important; min-height:0!important; background:transparent!important; border:0!important; border-radius:0!important; box-shadow:none!important;}
-.main:not(:has(#importStatus.ok)) > .topbar{order:0; margin:20px 0 4px!important; padding:0!important; border-top:0!important;}
 .pageTitle{display:none!important;}
-.actions{display:grid!important; grid-template-columns:1fr 1fr!important; gap:8px!important; margin:0!important; width:100%!important; overflow:visible!important;}
-.actions .importStatus{grid-column:1 / -1!important; order:-1; display:flex!important; justify-content:flex-start!important; align-items:center!important; gap:8px!important; height:auto!important; min-height:24px!important; min-width:0!important; margin:0 0 8px!important; padding:0!important; background:transparent!important; border:0!important; box-shadow:none!important; font-weight:550!important; color:var(--muted)!important; text-align:left!important; overflow:hidden!important; text-overflow:ellipsis!important; white-space:nowrap!important;}
-.actions .btn, .actions label.btn{width:100%!important; min-width:0!important; height:46px!important; min-height:46px!important; display:inline-flex!important; align-items:center!important; justify-content:center!important; padding:0 12px!important; border-radius:6px!important; font-weight:650!important; white-space:nowrap!important;}
-.actions .btn:disabled{opacity:1!important; color:var(--muted2)!important; background:var(--wht-a05)!important; border-color:var(--bone-a08)!important;}
 #backupBtn{display:none!important;}
 #dashboard.active{display:flex!important; flex-direction:column!important;}
 #dashboard .dashboardHeroOnly{order:1; margin-top:24px!important; gap:0!important; grid-template-columns:1fr!important;}
@@ -2172,6 +2163,7 @@ html, body{overflow-x:clip!important;}
 .mobileSheetStatus{margin:0 0 10px; font-size:12.5px; color:var(--text2); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
 .mobileSheetActions{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
 .mobileSheetActions button{display:flex; align-items:center; justify-content:center; min-height:46px; border-radius:8px; border:1px solid var(--line); background:var(--panel3); color:var(--text); font:inherit; font-size:13px; font-weight:650; cursor:pointer;}
+.mobileSheetActions button[disabled]{opacity:1; color:var(--muted2); background:var(--wht-a05); cursor:default;}
 .mobileSheetCloseBtn{display:flex; align-items:center; justify-content:center; width:100%; min-height:44px; margin-top:14px; border-radius:8px; border:1px solid var(--line); background:transparent; color:var(--text2); font:inherit; font-size:13px; font-weight:620; cursor:pointer;}
 #dashboard .dashDataAge{order:3!important;}
 #dashboard .capitalCard[data-capital="neto"]{border-bottom:0!important;}
@@ -2180,7 +2172,6 @@ html, body{overflow-x:clip!important;}
 .mobileTrustChip i.mtc-off{background:var(--muted2);}
 #dashboard .capitalCard[data-capital="xirr"]{cursor:pointer;}
 #dashboard .capitalCard[data-capital="xirr"] strong::after{content:'›'; margin-left:7px; color:var(--muted2); font-weight:600;}
-.main > .topbar{display:none!important;}
 .mobileCartera{padding:2px 0 0;}
 .mobileCartera h2{margin:18px 0 4px; font-size:20px; font-weight:700; letter-spacing:-.3px;}
 .mobileCarteraSub{margin:0 0 8px; font-size:12.5px; color:var(--muted);}
@@ -2266,7 +2257,6 @@ html, body{overflow-x:clip!important;}
 #historial .yearSummaryMain{margin-left:0!important;}
 #historial .annualTableWrap{padding:0 8px!important; margin-top:14px!important; margin-bottom:17px!important;}
 #historial .historyClean > .yearDetail{min-width:0;}
-.topbar::before{content:""; position:absolute; left:0; right:0; bottom:100%; height:22px; background:var(--bg);}
 #auditoria .auditWebHero{align-items:start!important;}
 #auditoria .dataStatusGrid{margin-top:14px; margin-bottom:17px!important;}
 #dashboard .heroTopMetric, #dashboard .capitalCard, #xirr .kpiStripContext, #historial .yearSummarySide div, #benchmark .benchmarkMetric, #auditoria .auditWebCard, #auditoria .dataStatusCard{border-radius:12px!important;}
@@ -2336,6 +2326,74 @@ html:not([data-arranque]) .edoRec{display:none;}
 html:not([data-arranque]) .edoVac{display:contents;}
 html[data-arranque="recuperando"] .edoRec{display:contents;}
 html[data-arranque="recuperando"] .edoVac{display:none;}
+.menuPop[hidden], .dlgDim[hidden], #dlg [data-paso][hidden], .bnLine[hidden], .menuItem[hidden], .menuSep[hidden], #estadoAccion[hidden], .dlgError[hidden], #mobileSheetLogoutAll[hidden]{display:none!important;}
+.salidoCard{display:none;}
+.pageHead{box-sizing:border-box;}
+@media (min-width: 761px){
+.sidebar > .brand{display:flex!important; align-items:center!important; justify-content:space-between!important; gap:8px!important; padding-left:4px!important; padding-right:0!important;}
+.sidebar > .brand .brandName{min-width:0; white-space:nowrap;}
+.menuBtn{flex:0 0 auto; width:38px; height:38px; display:inline-flex; align-items:center; justify-content:center; padding:0; border-radius:6px; border:1px solid var(--line); background:var(--bone-a01); color:var(--text); cursor:pointer;}
+.menuPop{position:absolute; z-index:60; margin-top:-6px; width:max-content; min-width:100%; box-sizing:border-box; padding:6px; flex-direction:column; gap:2px; background:var(--panel); border:1px solid var(--line); border-radius:10px; box-shadow:var(--soft);}
+.menuItem{min-height:38px; padding:0 14px; border:0; border-radius:6px; background:transparent; color:var(--text2); font:inherit; font-size:13px; font-weight:520; text-align:left; white-space:nowrap; cursor:pointer;}
+.menuItem.menuPri{color:var(--text); font-weight:640;}
+.menuItem[disabled]{color:var(--muted2); opacity:.55;}
+.menuSep{height:1px; margin:4px 8px; background:var(--line);}
+.sidebar .sideFoot.sideUpdate{display:none!important;}
+.sideBottom{position:absolute; left:14px; right:14px; bottom:18px; display:flex; flex-direction:column; gap:12px; padding:14px 0 0; border-top:1px solid var(--line);}
+.sideAlerts{flex-direction:column; gap:8px;}
+.sideAlerts:empty{display:none;}
+.bookNotice{display:flex; align-items:flex-start; gap:10px;}
+.bookNotice > .bullet{margin-top:5px;}
+.bnText{min-width:0; display:flex; flex-direction:column; gap:2px; font-size:11.5px; line-height:1.38; color:var(--muted);}
+.bnFile{color:var(--text); overflow-wrap:anywhere;}
+.main > .pageHead{margin:0 0 24px; padding:6px 0 0 42px;}
+.pageHead .pageTitle{display:block;}
+}
+@media (max-width: 760px){
+.menuBtn, .sideBottom{display:none!important;}
+.main > .pageHead{display:none!important;}
+.mobileSheetAllBtn{align-items:center; justify-content:center; width:100%; min-height:46px; margin-top:8px; border-radius:8px; border:1px solid var(--line); background:var(--panel3); color:var(--text); font:inherit; font-size:13px; font-weight:650; cursor:pointer;}
+}
+.dlgDim{position:fixed; inset:0; z-index:9999; align-items:center; justify-content:center; padding:24px; box-sizing:border-box; background:var(--blk-a22);}
+.dlg{position:relative; width:100%; max-width:440px; max-height:calc(100vh - 48px); overflow:auto; box-sizing:border-box; background:var(--panel); border:1px solid var(--line); border-radius:14px; box-shadow:var(--soft); padding:26px 30px 24px; color:var(--text);}
+.dlgPaso{flex-direction:column; gap:16px; margin:0;}
+.dlgX{position:absolute; top:10px; right:10px; width:38px; height:38px; display:inline-flex; align-items:center; justify-content:center; padding:0; border:0; border-radius:6px; background:transparent; color:var(--muted); cursor:pointer;}
+.dlgTitulo{margin:0; padding-right:40px; font-size:18px; font-weight:640; letter-spacing:-.3px; line-height:1.25; color:var(--text);}
+.dlgTexto{margin:0; font-size:13.5px; line-height:1.5; color:var(--text2);}
+.dlgEtiqueta{font-size:12px; line-height:1.45; color:var(--muted);}
+.dlgCampo{display:flex; flex-direction:column; gap:8px;}
+.dlgCampo label{font-size:12px; line-height:1.45; color:var(--muted);}
+.dlgCampo input{width:100%; height:44px; box-sizing:border-box; border-radius:8px; border:1px solid var(--line); background:var(--bg); color:var(--text); font:inherit; font-size:16px; padding:0 14px;}
+.dlgCampo input.dlgCodigo{height:56px; font-family:ui-monospace,'SF Mono',Menlo,monospace; font-size:26px; letter-spacing:.3em; text-align:center;}
+.dlgCampo input.dlgClaveCampo{font-family:ui-monospace,'SF Mono',Menlo,monospace; letter-spacing:.06em;}
+.dlgError{margin:0; font-size:13px; line-height:1.45; color:var(--red);}
+.dlgEnlace{align-self:flex-start; min-height:38px; padding:0; border:0; background:transparent; color:var(--text2); font:inherit; font-size:13px; text-decoration:underline; cursor:pointer;}
+.dlgFila{display:flex; flex-wrap:wrap; gap:10px; align-items:center;}
+.dlgFila > .dlgClave{flex:1 1 auto; min-width:0;}
+.dlgFila.dlgFilaClave{flex-wrap:nowrap;}
+.dlgClave{box-sizing:border-box; padding:12px 14px; border-radius:8px; border:1px solid var(--line); background:var(--bg); color:var(--text); font-family:ui-monospace,'SF Mono',Menlo,monospace; font-size:16px; letter-spacing:.08em; overflow-wrap:anywhere; white-space:pre-line;}
+.dlgClave.dlgClaveGrande{font-size:20px; letter-spacing:.1em; text-align:center; padding:16px 18px;}
+.dlgFila.dlgFilaQr{flex-wrap:nowrap; align-items:flex-start; gap:14px;}
+.dlgQr{flex:0 0 auto; width:104px; height:104px; box-sizing:border-box; padding:6px; border-radius:8px; background:var(--accent);}
+.dlgCabeza{display:flex; align-items:flex-start; gap:10px; padding-right:40px;}
+.dlgCabeza > .bullet{margin-top:7px;}
+.dlgCabeza > .dlgTitulo{padding-right:0;}
+.dlgIzq{align-self:flex-start;}
+.dlgEstado{display:flex; justify-content:space-between; gap:12px; padding:10px 0; border-bottom:1px solid var(--line); font-size:13.5px; color:var(--text2);}
+.dlg .btn{flex:0 0 auto!important; height:40px!important; min-height:40px!important; padding:0 18px!important; font-size:13.5px!important;}
+@media (max-width: 760px){
+.dlgDim{align-items:flex-end; padding:0;}
+.dlg{max-width:none; max-height:90vh; border-radius:16px 16px 0 0; border-bottom:0; padding:28px 20px calc(30px + env(safe-area-inset-bottom,0px));}
+.dlgIzq{align-self:stretch;}
+.dlg .btn{height:46px!important; min-height:46px!important;}
+.dlgFila.dlgFilaQr{display:none;}
+}
+.salidoCard h2{margin:0; font-size:24px; font-weight:700; letter-spacing:-.5px; color:var(--text);}
+.salidoCard p{margin:0; font-size:14px; line-height:1.5; color:var(--text2);}
+.salidoCard .btn{flex:0 0 auto!important; align-self:flex-start; height:40px!important; min-height:40px!important; padding:0 22px!important;}
+@media (max-width: 760px){
+.salidoCard .btn{align-self:stretch; height:46px!important; min-height:46px!important;}
+}
 /* ══════════════════ HOJA CRÍTICA · FIN ══════════════════ */
 </style>
 
@@ -2343,27 +2401,48 @@ html[data-arranque="recuperando"] .edoVac{display:none;}
 <body>
 <div class="app">
   <aside class="sidebar">
-    <div class="brand"><div class="brandName">Portfolio Oscar</div></div>
+    <div class="brand"><div class="brandName">Portfolio Oscar</div><button class="menuBtn" id="menuBtn" type="button" data-accion="menu" aria-label="Abrir menú de acciones" aria-haspopup="menu" aria-expanded="false" aria-controls="menuPop"><svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M3 5.5h14M3 10h14M3 14.5h14"></path></svg></button></div>
+    <div class="menuPop" id="menuPop" role="menu" aria-label="Acciones" hidden>
+      <button class="menuItem menuPri" id="importBtn" type="button" role="menuitem" data-accion="importar">Importar</button>
+      <button class="menuItem" id="backupBtn" type="button" role="menuitem">Backup</button>
+      <button class="menuItem cloudBtn" id="cloudSaveBtn" type="button" role="menuitem" disabled>Guardar</button>
+      <button class="menuItem cloudBtn" id="cloudLoadBtn" type="button" role="menuitem" disabled>Cargar</button>
+      <div class="menuSep" id="menuSepSeguridad" role="separator" hidden></div>
+      <button class="menuItem" id="securityBtn" type="button" role="menuitem" data-accion="seguridad" hidden>Código de seguridad</button>
+      <div class="menuSep" role="separator"></div>
+      <button class="menuItem cloudBtn" id="cloudLoginBtn" type="button" role="menuitem" data-accion="sesion">Entrar</button>
+      <button class="menuItem" id="cloudLogoutAllBtn" type="button" role="menuitem" data-accion="salir-todos" hidden>Salir en todos los aparatos</button>
+    </div>
+    <input class="fileInput" id="excelFile" type="file" accept=".xlsx,.xls">
     <div class="nav" id="nav" role="navigation" aria-label="Páginas del portfolio"><button class="active" aria-current="page" data-page="dashboard"><span>Dashboard</span><span class="navStatus off"></span></button><button data-page="cartera"><span>Cartera actual</span><span class="navStatus off"></span></button><button data-page="xirr"><span>XIRR</span><span class="navStatus off"></span></button><button data-page="benchmark"><span>Benchmark</span><span class="navStatus off"></span></button><button data-page="movimientos"><span>Movimientos</span><span class="navStatus off"></span></button><button data-page="historial"><span>Historial</span><span class="navStatus off"></span></button><button data-page="auditoria"><span>Auditoría</span><span class="navStatus off"></span></button></div>
     <div class="sideFoot sideUpdate"><span class="brandDate"><span class="edoRec">Recuperando datos…</span><span class="edoVac">Última actualización · sin datos</span></span></div>
+    <div class="sideBottom" id="sideBottom">
+      <div class="sideAlerts" id="sideAlerts"></div>
+      <div class="bookNotice" id="bookNotice" aria-live="polite">
+        <span class="bullet bOff" id="bnDot" aria-hidden="true"></span>
+        <div class="bnText">
+          <span class="bnFile" id="bnFile"><span class="edoRec">Recuperando datos…</span><span class="edoVac">Sin libro en este navegador</span></span>
+          <span class="bnLine" id="bnHow" hidden></span>
+          <span class="bnLine" id="bnCloud" hidden></span>
+          <span class="bnLine" id="bnVal" hidden></span>
+        </div>
+      </div>
+    </div>
   </aside>
 
   <main class="main">
-    <div class="topbar">
+    <div class="pageHead">
       <div class="pageTitle">
         <h1 id="title">Dashboard</h1>
         <p id="subtitle">Resumen principal desde la hoja RESUMEN del Excel.</p>
       </div>
-      <div class="actions">
-        <label class="btn primary" for="excelFile">Importar</label>
-        <input class="fileInput" id="excelFile" type="file" accept=".xlsx,.xls">
-        <button class="btn" id="backupBtn" type="button">Backup</button>
-        <button class="btn cloudBtn" id="cloudSaveBtn" type="button" disabled>Guardar</button>
-        <button class="btn cloudBtn" id="cloudLoadBtn" type="button" disabled>Cargar</button>
-        <button class="btn cloudBtn" id="cloudLoginBtn" type="button">Cloud</button>
-        <span class="importStatus" id="importStatus"><span class="bullet bOff"></span><span class="edoRec">Recuperando datos…</span><span class="edoVac">Sin Excel conectado</span></span>
-      </div>
     </div>
+
+    <section class="salidoCard" id="salidoCard" aria-labelledby="salidoTitle">
+      <h2 id="salidoTitle">Has salido</h2>
+      <p>En este navegador ya no queda nada de tu portfolio: ni el libro ni la sesión.</p>
+      <button class="btn primary" type="button" data-accion="entrar">Entrar</button>
+    </section>
 
     <section class="section active" id="dashboard">
       <div class="grid pageBlock dashboardHeroOnly">
@@ -3519,6 +3598,13 @@ function benchmarkSafeSource(v){
 // sesión). Textos propios y comprensibles; los details solo se citan tras
 // validarlos (fechas de día, símbolos de la allowlist).
 function benchmarkPresentEdgeFailure(requestView, info){
+  // v175.93 · la sesión sin segundo factor NO es «No autorizado»: el usuario sí lo está, le
+  // falta el código. Se mira el código de la respuesta ANTES que el estado HTTP.
+  if(info.status===403 && info.code==='MFA_REQUIRED'){
+    benchmarkFail(requestView, 'Falta el código', 'yellow', 'Entra con el código de seguridad para ver el Benchmark.', '');
+    if(typeof avisar==='function' && typeof AVISOS!=='undefined') avisar('codigo', AVISOS.codigo());
+    return true;
+  }
   if(info.status===401 || info.status===403){
     benchmarkClearViewData(requestView);
     return benchmarkAuthStatusFromError({context:{status:info.status}});
@@ -3526,6 +3612,7 @@ function benchmarkPresentEdgeFailure(requestView, info){
   const d=info.details || {};
   const sym=benchmarkSafeSymbol(d.symbol);
   const dia=benchmarkSafeDay(d.date);
+  const diaEs=/^\d{4}-\d{2}-\d{2}$/.test(dia) ? `${dia.slice(8,10)}/${dia.slice(5,7)}/${dia.slice(0,4)}` : '';
   const MAPA={
     UPDATE_IN_PROGRESS:['Actualización en curso','yellow','Otra actualización del Benchmark está publicando ahora mismo.','Benchmark: actualización en curso. Reintenta en unos segundos.'],
     UPDATE_DEADLINE_EXCEEDED:['Actualización cancelada','yellow','La actualización superó su tiempo máximo y se canceló de forma controlada.','Benchmark: la actualización se canceló por tiempo. Reintenta.'],
@@ -3535,11 +3622,13 @@ function benchmarkPresentEdgeFailure(requestView, info){
     PRICE_NOT_YET_AVAILABLE:['Cierre no disponible','yellow',
       'El cierre'+(sym?(' de '+sym):'')+(dia?(' del '+dia):'')+' aún no está publicado por el proveedor.',
       'Benchmark: el último cierre aún no está disponible. Inténtalo más tarde.'],
-    FX_DATA_MISSING:['Sin tipo BCE','yellow',
+    // v175.93 · #81 · los textos de la maqueta aprobada: la fecha en dd/mm/aaaa y diciendo
+    // que es pasajero. Sin aviso rojo debajo: el mensaje entero va en la nota.
+    FX_DATA_MISSING:['Sin cambio del día','yellow',
       d.targetClosed===true
-        ? ('El BCE no publica tipo EUR/USD'+(dia?(' el '+dia):'')+' (día de cierre TARGET).')
-        : ('Falta el tipo oficial BCE EUR/USD'+(dia?(' del '+dia):'')+'.'),
-      'Benchmark: falta el tipo oficial EUR/USD del BCE para valorar en euros.'],
+        ? ('El Banco Central Europeo no publica el cambio euro-dólar'+(diaEs?(' del '+diaEs):'')+', la fecha de tu valoración. Las vistas en dólares no tienen cifras para ese día. Es pasajero: vuelven con tu siguiente valoración.')
+        : ('El Banco Central Europeo aún no ha publicado el cambio euro-dólar'+(diaEs?(' del '+diaEs):'')+'. Las vistas en dólares no tienen cifras por ahora. Es pasajero: vuelven cuando lo publique.'),
+      ''],
     PROVIDER_TIMEOUT:['Mercado no disponible','yellow','El proveedor de datos no responde (timeout).','Benchmark: datos de mercado temporalmente no disponibles. No se muestran cifras.'],
     PROVIDER_HTTP_ERROR:['Mercado no disponible','yellow','El proveedor de datos devolvió un error temporal.','Benchmark: datos de mercado temporalmente no disponibles. No se muestran cifras.'],
     PROVIDER_NETWORK_ERROR:['Mercado no disponible','yellow','No se pudo contactar con el proveedor de datos.','Benchmark: datos de mercado temporalmente no disponibles. No se muestran cifras.'],
@@ -3551,11 +3640,20 @@ function benchmarkPresentEdgeFailure(requestView, info){
     SNAPSHOT_CORRUPT:['Snapshot bloqueado','red','El almacén de datos del servidor no supera su validación de integridad.','Benchmark: snapshot bloqueado por validación. Requiere intervención manual.'],
     HISTORY_RECONCILIATION_FAILED:['Snapshot bloqueado','red','La unión histórica de datos no está conciliada y aprobada.','Benchmark: unión histórica sin conciliar. Requiere intervención manual.'],
     CALENDAR_NOT_COVERED:['Calendario no cubierto','red','El calendario oficial versionado del servidor no cubre la fecha solicitada.','Benchmark: calendario oficial no cubierto para esta fecha.'],
-    CONFIG_ERROR:['Configuración pendiente','red','La configuración del servidor del Benchmark está incompleta.','Benchmark: configuración del servidor pendiente.']
+    CONFIG_ERROR:['Configuración pendiente','red','La configuración del servidor del Benchmark está incompleta.','Benchmark: configuración del servidor pendiente.'],
+    // v175.93 · #81 · el servidor rechazó su propia actualización y no guardó nada.
+    UPDATE_VALIDATION_FAILED:['No actualizado','yellow','Hoy no hay cifras para esta vista. El servidor ha rechazado su propia actualización y no ha guardado nada; lo que ya tenía guardado sigue intacto.','']
   };
   const fila=info.code ? MAPA[info.code] : null;
   if(fila){
     benchmarkFail(requestView, fila[0], fila[1], fila[2], fila[3]);
+    // v175.93 · con estos dos la Edge ha contestado bien formado: está activa, y se dice.
+    if(info.code==='UPDATE_VALIDATION_FAILED' || info.code==='FX_DATA_MISSING'){
+      const edge=document.getElementById('benchmarkEdgeCheck');
+      const provider=document.getElementById('benchmarkProviderCheck');
+      if(edge){ edge.textContent='Activa'; edge.className='green'; }
+      if(provider){ provider.textContent='EODHD + ECB + Coinbase'; provider.className='neutral'; }
+    }
     return true;
   }
   benchmarkFail(requestView, 'Error','red','No se han podido cargar los datos.','Benchmark no disponible: la respuesta del servidor no es utilizable.');
@@ -4914,12 +5012,13 @@ function sheetRows(name){
 function cell(rows, r, c){ return rows?.[r-1]?.[c-1] ?? ''; }
 function monthlyDataStatus(row){ return normalizeText(row?.[43] || '').trim(); }
 function isRealMonthlyClose(row){ return monthlyDataStatus(row)==='cierre real'; }
-function setStatus(ok, text, fileName=''){
-  const status=document.getElementById('importStatus');
-  if(!status) return;
-  status.className = ok ? 'importStatus ok' : 'importStatus';
-  status.innerHTML = `<span class="bullet ${ok?'bOk':'bBad'}"></span>${escHtml(text || fileName)}`;
-}
+/* v175.93 · EL CHIP DE ARRIBA YA NO EXISTE. Lo que decía se reparte en dos sitios:
+   cómo y cuándo llegó el libro lo dice el aviso de la columna (`pintaAvisoLibro`), y los
+   problemas salen en una ventana con su texto, su acción y su cruz, y al cerrarla queda
+   un punto en la columna hasta que se resuelven (`avisar`, en el bloque de Supabase).
+   Estas dos son la puerta desde este bloque: el de Supabase se ejecuta después. */
+function avisoDelLibro(clave, aviso){ if(typeof avisar==='function') avisar(clave, aviso); }
+function resuelveDelLibro(...claves){ if(typeof resuelveAviso==='function') claves.forEach(c=>resuelveAviso(c)); }
 function setNavStatus(page, st){
   const dot = document.querySelector(`.nav button[data-page="${page}"] .navStatus`);
   if(dot) dot.className = `navStatus ${st}`;
@@ -5869,13 +5968,12 @@ function updateDataStatus(){
     setDataStatus('local', recuperando ? REC : (realImportDate ? formatDataStatusDate(realImportDate) : 'Pendiente'), recuperando ? 'neutral' : (realImportDate ? 'green' : 'neutral'));
     const dashAgeEl=document.querySelector('[data-data-status="dash-age"]');
     if(dashAgeEl){
+      // v175.93 · #86 · cómo y cuándo llegó DE VERDAD: la misma frase que el aviso de la columna.
+      const llegada = llegadaDelLibro();
       if(recuperando){
         dashAgeEl.textContent = REC;
-      }else if(realImportDate){
-        const origen = importedData?.tipo || 'Importado';
-        dashAgeEl.textContent = `${valuationDate ? `Valoración ${valuationDate} · ` : ''}${origen} ${formatDataStatusDate(realImportDate)}`;
-      }else if(hasExcel){
-        dashAgeEl.textContent = `${valuationDate ? `Valoración ${valuationDate} · ` : ''}Excel recuperado`;
+      }else if(hasExcel && (llegada || valuationDate)){
+        dashAgeEl.textContent = [valuationDate ? `Valoración ${valuationDate}` : '', llegada].filter(Boolean).join(' · ');
       }else{
         dashAgeEl.textContent = 'Importa el Excel para ver la fecha de los datos.';
       }
@@ -5905,9 +6003,61 @@ function updateDataStatus(){
     const bCls=b?.className || '';
     setDataStatus('benchmark', bText, bCls);
     setDataStatus('benchmark-note', bText.toLowerCase().includes('ok') || bCls.includes('green') ? 'Datos recibidos vía Edge Function' : 'Disponible cuando cargues benchmark');
+    pintaAvisoLibro();
   }catch(err){
     console.warn('No se pudo actualizar Estado de datos:', err);
   }
+}
+
+/* v175.93 · #86 · EL AVISO DEL LIBRO DICE SIEMPRE CÓMO Y CUÁNDO LLEGÓ DE VERDAD.
+   La frase sale de lo que `applyWorkbookAfterRead` guarda junto a los bytes del libro en
+   pantalla —`importedData.tipo` y `.fecha`—, que la copia del navegador conserva: tras
+   recargar, un libro que llegó de la nube sigue diciendo «Cargado desde nube» y su hora,
+   no «recuperado». Una sola sede: la usan la columna, la línea del Dashboard y la hoja
+   «Más» del iPhone. Si no se sabe cómo llegó, la línea se calla: no afirma «Importado». */
+function llegadaDelLibro(){
+  if(!importedWorkbook) return '';
+  const tipo = importedData?.tipo || '';
+  const fecha = importedData?.fecha ? formatDataStatusDate(importedData.fecha) : '';
+  if(!tipo) return '';
+  if(tipo==='Importado') return fecha ? `Importado ${fecha}` : 'Importado';
+  return fecha ? `${tipo} · ${fecha}` : tipo;
+}
+/* En la columna, estrecha, la línea se parte por detrás del «·», como en la maqueta, y nunca
+   entre la fecha y la hora. Una sola sede: la usa `pintaAvisoLibro` y la usa `verify_encaje`
+   para poner sus estados con el mismo corte que la web. */
+function llegadaEnColumna(texto){
+  return String(texto || '').replace(' · ', '\u00a0· ').replace(', ', ',\u00a0');
+}
+function libroPendienteDeNube(){
+  return typeof libroSinGuardarEnNube==='function' && libroSinGuardarEnNube();
+}
+function pintaAvisoLibro(){
+  const punto=document.getElementById('bnDot'), archivo=document.getElementById('bnFile');
+  if(!punto || !archivo) return;
+  const pon=(id, texto)=>{ const e=document.getElementById(id); if(!e) return; e.textContent=texto || ''; e.hidden=!texto; };
+  if(recuperandoLibro() || !importedWorkbook){
+    punto.className='bullet bOff';
+    archivo.textContent = recuperandoLibro() ? 'Recuperando datos…' : 'Sin libro en este navegador';
+    pon('bnHow',''); pon('bnCloud',''); pon('bnVal','');
+    return;
+  }
+  punto.className='bullet bOk';
+  archivo.textContent = importedData?.fileName || 'Excel';
+  pon('bnHow', llegadaEnColumna(llegadaDelLibro()));
+  pon('bnCloud', libroPendienteDeNube() ? 'Sin guardar en la nube' : '');
+  const valoracion = fmtDate(cell(sheetRows('XIRR GLOBAL'),4,1));
+  pon('bnVal', valoracion ? `Valoración ${valoracion}` : '');
+}
+/* #87 · la línea de «Más» › DATOS del iPhone. Copiaba `textContent` del chip, que desde la
+   v175.85 lleva dos textos —«recuperando» y «vacío»— y los juntaba: «Recuperando
+   datos…Sin Excel conectado». Ahora se compone del estado, no de lo que haya pintado. */
+function textoDatosMovil(){
+  const aviso = typeof avisoPrincipal==='function' ? avisoPrincipal() : null;
+  if(aviso) return aviso.corto;
+  if(recuperandoLibro()) return 'Recuperando datos…';
+  if(!importedWorkbook) return 'Sin libro en este navegador';
+  return [llegadaDelLibro() || importedData?.fileName || 'Excel', libroPendienteDeNube() ? 'Sin guardar en la nube' : ''].filter(Boolean).join(' · ');
 }
 
 function arrayBufferToBase64(buffer){
@@ -5947,12 +6097,15 @@ function saveWorkbookCache(buffer, fileName, options={}){
     if(options.manualImport){
       localStorage.setItem(LAST_MANUAL_IMPORT_KEY, nowIso);
     }
+    resuelveDelLibro('navegador');
     updateDataStatus?.();
     return true;
   }catch(err){
     console.warn('No se han podido guardar los datos localmente:', err);
     motivoGuardadoFallido = err?.name === 'QuotaExceededError' ? 'memoria llena' : 'el navegador no lo permite';
-    try{ setStatus?.(true, `Excel importado, pero no se ha podido guardar en este navegador (${motivoGuardadoFallido}) · si recargas no lo verás: vuelve a importarlo`); }catch(_){}
+    try{ avisoDelLibro('navegador', {nivel:'warn', corto:'Sin copia aquí', titulo:'No se ha podido guardar en este navegador',
+      texto:`El libro está en pantalla, pero no se ha guardado en este navegador (${motivoGuardadoFallido}): si recargas no lo verás. Vuelve a importarlo o a cargarlo de la nube.`,
+      accion:{etiqueta:'Exportar backup', hace:'backup'}}); }catch(_){}
     return false;
   }
 }
@@ -5970,15 +6123,19 @@ function applyWorkbookAfterRead(fileName, fromCache=false, candidate=importedWor
     // código interno, y diciendo lo que es cierto ahora: el rechazo no toca
     // `importedWorkbook`, así que si hay uno es el Excel anterior, que sigue en pantalla.
     const CODIGO_CONTROLES='AUDITORIA_IDENTIDAD: ';
+    const ahora=importedWorkbook ? 'Sigues viendo el Excel anterior.' : 'No hay ningún Excel cargado.';
+    const guardada=llegada.trasRechazo ? ' El Excel guardado sigue en este navegador: expórtalo con Backup o importa otro.' : '';
     if(issues.length===1 && issues[0].startsWith(CODIGO_CONTROLES)){
       const frase=issues[0].slice(CODIGO_CONTROLES.length);
-      const ahora=importedWorkbook ? 'Sigues viendo el Excel anterior.' : 'No hay ningún Excel cargado.';
-      const guardada=llegada.trasRechazo ? ' El Excel guardado sigue en este navegador: expórtalo con Backup o importa otro.' : '';
-      setStatus(false, `Excel rechazado: ${frase.charAt(0).toLowerCase()}${frase.slice(1)}. ${ahora}${guardada}`);
+      avisoDelLibro('excelRechazado', {nivel:'bad', corto:'Excel rechazado', titulo:'El Excel no se ha importado',
+        texto:`${frase.charAt(0).toUpperCase()}${frase.slice(1)}. ${ahora}${guardada}`, accion:{etiqueta:'Importar otro', hace:'importar'}});
     }else{
       const visible=issues.slice(0,3).map(issue=>issue.startsWith(CODIGO_CONTROLES) ? issue.slice(CODIGO_CONTROLES.length) : issue).join(' · ');
-      const extra=issues.length>3 ? ` · y ${issues.length-3} incidencia(s) más` : '';
-      setStatus(false, `EXCEL RECHAZADO · ${visible}${extra}${llegada.trasRechazo || ''}`);
+      // v175.93 · el plural, bien escrito: «y 1 aviso más», «y 2 avisos más».
+      const resto=issues.length-3;
+      const extra=resto>0 ? ` y ${resto} ${resto===1 ? 'aviso' : 'avisos'} más` : '';
+      avisoDelLibro('excelRechazado', {nivel:'bad', corto:'Excel rechazado', titulo:'El Excel no se ha importado',
+        texto:`${visible}${extra}. ${ahora}${guardada}`, accion:{etiqueta:'Importar otro', hace:'importar'}});
     }
     setNavStatus('auditoria','bad');
     // v175.8: registrar el intento rechazado y reflejarlo en Auditoría (solo
@@ -6003,7 +6160,8 @@ function applyWorkbookAfterRead(fileName, fromCache=false, candidate=importedWor
   applyBenchmarkView(benchmarkActiveView);
   benchmarkSetStatus('Sin cargar', '', 'Pulsa «Cargar benchmark» para comparar el Excel que estás viendo.');
   updateDashboard(); updateCartera(); updateXirr(); updateHistorial(); updateAuditoria(); updateDataStatus?.();
-  setStatus(true, fromCache ? `${fileName || 'Excel'} recuperado` : `${fileName || 'Excel'} importado`);
+  // v175.93 · un libro aceptado resuelve los avisos que hablaban de no tener uno bueno.
+  resuelveDelLibro('excelRechazado', 'excelError', 'copiaIlegible', 'sinLibro', 'sinLibroGuardar');
   setNavStatus('dashboard','ok'); setNavStatus('cartera','ok'); setNavStatus('xirr','ok'); setNavStatus('movimientos','ok'); setNavStatus('historial','ok');
   return true;
 }
@@ -6014,7 +6172,7 @@ function loadWorkbookCache(){
   // tiene que pasar por TODOS los caminos, incluidos los de fallo.
   const fin = (msg) => {
     document.documentElement.removeAttribute('data-arranque');
-    if(msg){ try{ setStatus(false, msg); }catch(_){} }
+    if(msg){ try{ avisoDelLibro(msg.clave, msg); }catch(_){} }
     // ficha #50 · Y SE REESCRIBE EL ESTADO DE DATOS. Sin esto, los seis sitios
     // que sostienen «Recuperando datos…» se quedarían colgados en él por los
     // caminos donde nadie más vuelve a llamar —el CDN caído es el real, medido—:
@@ -6032,7 +6190,9 @@ function loadWorkbookCache(){
       // si `cdn.sheetjs.com` no llegaba, la web se quedaba sin datos y sin
       // decirlo — y desde la v175.85, con «Recuperando datos…» colgado para
       // siempre. Ahora termina en un estado dicho.
-      fin('SIN LIBRERÍA · no ha llegado SheetJS (cdn.sheetjs.com). Los datos guardados siguen ahí: recarga la página');
+      fin({clave:'sinLibreria', nivel:'bad', corto:'Sin librería', titulo:'No ha llegado la librería que lee el Excel',
+        texto:'La web no ha podido descargar SheetJS (cdn.sheetjs.com). Tus datos guardados siguen en este navegador: recarga la página.',
+        accion:{etiqueta:'Recargar', hace:'recargar'}});
       return;
     }
     const meta = leeMetaLibro();
@@ -6041,13 +6201,14 @@ function loadWorkbookCache(){
     // v175.92 · ficha #67 · RECHAZADA O NO, LA COPIA GUARDADA SE CONSERVA: borrarla era
     // perder el Excel de este navegador por un cambio de la propia web.
     applyWorkbookAfterRead(meta.fileName || 'último Excel', true, candidate,
-      {buffer, tipo:meta.tipo || 'Guardado en este navegador', fecha:meta.fecha || meta.savedAt || '', trasRechazo:' · el Excel guardado sigue en este navegador: expórtalo con Backup o importa otro'});
+      {buffer, tipo:meta.tipo || 'Guardado en este navegador', fecha:meta.fecha || meta.savedAt || '', trasRechazo:true});
     // En el camino bueno `applyWorkbookAfterRead` ya ha escrito su propio
     // estado, así que aquí sólo se retira el de recuperación.
     fin();
   }catch(err){
     console.warn('No se han podido recuperar los datos guardados:', err);
-    fin('NO SE HA PODIDO ABRIR EL EXCEL GUARDADO · sigue guardado en este navegador: expórtalo con Backup o vuelve a importar el Excel');
+    fin({clave:'copiaIlegible', nivel:'bad', corto:'Copia ilegible', titulo:'No se ha podido abrir el Excel guardado',
+      texto:'Sigue guardado en este navegador: expórtalo con Backup o vuelve a importar el Excel.', accion:{etiqueta:'Exportar backup', hace:'backup'}});
   }
 }
 
@@ -6065,8 +6226,8 @@ function exportWorkbookBackup(){
     const meta = leeMetaLibro();
     const buffer = getCurrentWorkbookBufferForBackup();
     if(!buffer){
-      alert('Primero importa el Excel. Después podrás exportar una copia de backup.');
-      setStatus(false, 'SIN DATOS · importa primero el Excel');
+      avisoDelLibro('sinLibro', {nivel:'warn', corto:'Sin libro', titulo:'No hay ningún libro que exportar',
+        texto:'Importa el Excel o cárgalo de la nube; después podrás exportar una copia.', accion:{etiqueta:'Importar', hace:'importar'}});
       return;
     }
     const blob = new Blob([buffer], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
@@ -6084,18 +6245,16 @@ function exportWorkbookBackup(){
       a.remove();
       URL.revokeObjectURL(url);
     }, 1000);
-    setStatus(true, `Backup exportado · ${fileName}`);
+    resuelveDelLibro('backup', 'sinLibro');
   }catch(err){
     console.error(err);
-    alert('No se ha podido exportar el backup: ' + err.message);
-    setStatus(false, `ERROR backup · ${err.message}`);
+    avisoDelLibro('backup', {nivel:'bad', corto:'Backup fallido', titulo:'No se ha podido exportar el backup',
+      texto:`El navegador no ha dejado descargar la copia (${err.message}). Vuelve a probar.`, accion:{etiqueta:'Reintentar', hace:'backup'}});
   }
 }
 
-const backupButton = document.getElementById('backupBtn');
-if(backupButton){
-  backupButton.addEventListener('click', exportWorkbookBackup);
-}
+// v175.93 · el botón de Backup vive en el menú de la columna y su pulsación la atiende el
+// escuchador delegado de `document` (bloque de Supabase): ningún botón lleva el suyo.
 
 function contractText(value){ return normalizeText(value).trim(); }
 function contractNumber(value){ return typeof value==='number' && Number.isFinite(value); }
@@ -6565,7 +6724,8 @@ async function handleExcelImport(file){
     const candidate = XLSX.read(buffer, {type:'array', cellDates:false, cellFormula:true, cellStyles:false});
     const ok = applyWorkbookAfterRead(file.name, false, candidate, {buffer, tipo:'Importado', fecha:new Date().toISOString()});
     if(ok) saveWorkbookCache(buffer, file.name, {manualImport:true});
-  }catch(err){ console.error(err); setStatus(false, `ERROR · ${err.message}`); setNavStatus('auditoria','bad'); }
+  }catch(err){ console.error(err); avisoDelLibro('excelError', {nivel:'bad', corto:'Error al importar', titulo:'El Excel no se ha podido leer',
+    texto:`No se ha podido leer ese archivo como Excel (${err.message}). Prueba con otro.`, accion:{etiqueta:'Importar otro', hace:'importar'}}); setNavStatus('auditoria','bad'); }
 }
 
 /* Dashboard interactivo: pestañas reales para visión global y allocation.
@@ -10086,6 +10246,129 @@ html:not([data-arranque]) .edoRec{display:none;}
 html:not([data-arranque]) .edoVac{display:contents;}
 html[data-arranque="recuperando"] .edoRec{display:contents;}
 html[data-arranque="recuperando"] .edoVac{display:none;}
+
+/* ====================================================================================
+   v175.93 · bloque Supabase, lote 3 + menú en la columna · maqueta aprobada por Óscar el
+   16/10/2026 (`docs/maquetas/lote3_menu/`). Al final del bloque único, como manda
+   AGENTS.md: gana por orden, sin abrir otra etiqueta. Sólo tokens de la web.
+   · Escritorio (desde 761): botón de menú junto a «Portfolio Oscar», el menú, los avisos
+     y el aviso del libro abajo en la columna, y el título de página como texto.
+   · Móvil (hasta 760): conserva su diseño; sólo se añaden la ventana (como hoja desde
+     abajo), «Has salido» y «Salir en todos los aparatos» en «Más».
+   ==================================================================================== */
+.menuPop[hidden], .dlgDim[hidden], #dlg [data-paso][hidden], .bnLine[hidden], .menuItem[hidden],
+.menuSep[hidden], #estadoAccion[hidden], .dlgError[hidden], #mobileSheetLogoutAll[hidden]{display:none!important;}
+.salidoCard{display:none;}
+.pageHead{box-sizing:border-box;}
+
+/* ----- la columna, en escritorio ----- */
+@media (min-width:761px){
+  .sidebar > .brand{display:flex!important; align-items:center!important; justify-content:space-between!important; gap:8px!important;
+    padding-left:4px!important; padding-right:0!important;}
+  .sidebar > .brand .brandName{min-width:0; white-space:nowrap;}
+  .menuBtn{flex:0 0 auto; width:38px; height:38px; display:inline-flex; align-items:center; justify-content:center; padding:0;
+    border-radius:6px; border:1px solid var(--line); background:var(--bone-a01); color:var(--text); cursor:pointer;}
+  .menuBtn:hover{background:var(--wht-a12);}
+  .menuBtn[aria-expanded="true"]{background:var(--panel3);}
+  .menuBtn:focus-visible, .menuItem:focus-visible, .sideAlert:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+  .menuPop{position:absolute; z-index:60; margin-top:-6px; width:max-content; min-width:100%; box-sizing:border-box; padding:6px;
+    display:flex; flex-direction:column; gap:2px; background:var(--panel); border:1px solid var(--line); border-radius:10px; box-shadow:var(--soft);}
+  .menuItem{min-height:38px; padding:0 14px; border:0; border-radius:6px; background:transparent; color:var(--text2);
+    font:inherit; font-size:13px; font-weight:520; text-align:left; white-space:nowrap; cursor:pointer;}
+  .menuItem:hover:not([disabled]){background:var(--wht-a12); color:var(--text);}
+  .menuItem.menuPri{color:var(--text); font-weight:640;}
+  .menuItem[disabled]{color:var(--muted2); opacity:.55; cursor:default;}
+  .menuSep{height:1px; margin:4px 8px; background:var(--line);}
+
+  .sidebar .sideFoot.sideUpdate{display:none!important;}
+  .sideBottom{position:absolute; left:14px; right:14px; bottom:18px; display:flex; flex-direction:column; gap:12px;
+    padding:14px 0 0; border-top:1px solid var(--line);}
+  .sideAlerts{display:flex; flex-direction:column; gap:8px;}
+  .sideAlerts:empty{display:none;}
+  .sideAlert{min-height:38px; padding:0 12px; display:flex; align-items:center; gap:10px; border-radius:6px;
+    border:1px solid var(--tint-warn-07); background:var(--tint-warn-06); color:var(--warn);
+    font:inherit; font-size:13px; font-weight:560; text-align:left; cursor:pointer;}
+  .sideAlert.sideAlertBad{border-color:var(--tint-bad-06); background:var(--tint-bad-01); color:var(--red);}
+  .bookNotice{display:flex; align-items:flex-start; gap:10px;}
+  .bookNotice > .bullet{margin-top:5px;}
+  .bnText{min-width:0; display:flex; flex-direction:column; gap:2px; font-size:11.5px; line-height:1.38; color:var(--muted);}
+  .bnFile{color:var(--text); overflow-wrap:anywhere;}
+
+  /* el título de cada página, como texto y alineado con los títulos de los paneles (42) */
+  .main > .pageHead{margin:0 0 24px; padding:6px 0 0 42px;}
+  .pageHead .pageTitle{display:block;}
+}
+/* de 761 a 1150 la columna va ENCIMA del contenido (no es fija): el pie va en su sitio, tras
+   la navegación, como iba el pie de antes (`.sideFoot{position:static}` a esas anchuras). */
+@media (min-width:761px) and (max-width:1150px){
+  .sideBottom{position:static; margin-top:18px;}
+}
+@media (max-width:760px){
+  .menuBtn, .menuPop, .sideBottom{display:none!important;}
+  .main > .pageHead{display:none!important;}
+  .mobileSheetAllBtn{display:flex; align-items:center; justify-content:center; width:100%; min-height:46px; margin-top:8px;
+    border-radius:8px; border:1px solid var(--line); background:var(--panel3); color:var(--text); font:inherit; font-size:13px; font-weight:650; cursor:pointer;}
+}
+
+/* ----- la ventana única: entrar, código, reserva, alta, estado, salir y avisos ----- */
+.dlgDim{position:fixed; inset:0; z-index:9999; display:flex; align-items:center; justify-content:center; padding:24px;
+  box-sizing:border-box; background:var(--blk-a22);}
+.dlg{position:relative; width:100%; max-width:440px; max-height:calc(100vh - 48px); overflow:auto; box-sizing:border-box;
+  background:var(--panel); border:1px solid var(--line); border-radius:14px; box-shadow:var(--soft); padding:26px 30px 24px; color:var(--text);}
+.dlg.dlgAncho{max-width:560px;}
+.dlgPaso{display:flex; flex-direction:column; gap:16px; margin:0;}
+.dlgX{position:absolute; top:10px; right:10px; width:38px; height:38px; display:inline-flex; align-items:center; justify-content:center;
+  padding:0; border:0; border-radius:6px; background:transparent; color:var(--muted); cursor:pointer;}
+.dlgX:hover{background:var(--wht-a12); color:var(--text);}
+.dlgTitulo{margin:0; padding-right:40px; font-size:18px; font-weight:640; letter-spacing:-.3px; line-height:1.25; color:var(--text);}
+.dlgTexto{margin:0; font-size:13.5px; line-height:1.5; color:var(--text2);}
+.dlgEtiqueta{font-size:12px; line-height:1.45; color:var(--muted);}
+.dlgCampo{display:flex; flex-direction:column; gap:8px;}
+.dlgCampo label{font-size:12px; line-height:1.45; color:var(--muted);}
+.dlgCampo input{width:100%; height:44px; box-sizing:border-box; border-radius:8px; border:1px solid var(--line); background:var(--bg);
+  color:var(--text); font:inherit; font-size:16px; padding:0 14px;}
+.dlgCampo input:focus{outline:2px solid var(--accent); outline-offset:1px;}
+.dlgCampo input[aria-invalid="true"]{border-color:var(--red);}
+.dlgCampo input.dlgCodigo{height:56px; font-family:ui-monospace,'SF Mono',Menlo,monospace; font-size:26px; letter-spacing:.3em; text-align:center;}
+.dlgCampo input.dlgClaveCampo{font-family:ui-monospace,'SF Mono',Menlo,monospace; letter-spacing:.06em;}
+.dlgError{margin:0; font-size:13px; line-height:1.45; color:var(--red);}
+.dlgEnlace{align-self:flex-start; min-height:38px; padding:0; border:0; background:transparent; color:var(--text2);
+  font:inherit; font-size:13px; text-decoration:underline; cursor:pointer;}
+.dlgFila{display:flex; flex-wrap:wrap; gap:10px; align-items:center;}
+.dlgFila > .dlgClave{flex:1 1 auto; min-width:0;}
+.dlgFila.dlgFilaClave{flex-wrap:nowrap;}
+.dlgClave{box-sizing:border-box; padding:12px 14px; border-radius:8px; border:1px solid var(--line); background:var(--bg); color:var(--text);
+  font-family:ui-monospace,'SF Mono',Menlo,monospace; font-size:16px; letter-spacing:.08em; overflow-wrap:anywhere; white-space:pre-line;}
+.dlgClave.dlgClaveGrande{font-size:20px; letter-spacing:.1em; text-align:center; padding:16px 18px;}
+.dlgFila.dlgFilaQr{flex-wrap:nowrap; align-items:flex-start; gap:14px;}
+.dlgQr{flex:0 0 auto; width:104px; height:104px; box-sizing:border-box; padding:6px; border-radius:8px; background:var(--accent);}
+.dlgCabeza{display:flex; align-items:flex-start; gap:10px; padding-right:40px;}
+.dlgCabeza > .bullet{margin-top:7px;}
+.dlgCabeza > .dlgTitulo{padding-right:0;}
+.dlgIzq{align-self:flex-start;}
+.dlgEstado{display:flex; justify-content:space-between; gap:12px; padding:10px 0; border-bottom:1px solid var(--line); font-size:13.5px; color:var(--text2);}
+.dlg .btn{flex:0 0 auto!important; height:40px!important; min-height:40px!important; padding:0 18px!important; font-size:13.5px!important;}
+@media (max-width:760px){
+  .dlgDim{align-items:flex-end; padding:0;}
+  .dlg, .dlg.dlgAncho{max-width:none; max-height:90vh; border-radius:16px 16px 0 0; border-bottom:0; padding:28px 20px calc(30px + env(safe-area-inset-bottom,0px));}
+  .dlgIzq{align-self:stretch;}
+  .dlg .btn{height:46px!important; min-height:46px!important;}
+  .dlgFila.dlgFilaQr{display:none;}
+}
+
+/* ----- «Has salido» (#85): la pantalla vacía, sólo con «Entrar» ----- */
+html[data-salido] .salidoCard{display:flex; flex-direction:column; gap:16px; max-width:440px; margin:12vh auto 0; box-sizing:border-box;
+  padding:30px 34px 28px; background:var(--panel2); border:1px solid var(--line); border-radius:14px;}
+html[data-salido] .main > .pageHead,
+html[data-salido] #dashboard, html[data-salido] #cartera, html[data-salido] #xirr, html[data-salido] #benchmark,
+html[data-salido] #movimientos, html[data-salido] #historial, html[data-salido] #auditoria{display:none!important;}
+.salidoCard h2{margin:0; font-size:24px; font-weight:700; letter-spacing:-.5px; color:var(--text);}
+.salidoCard p{margin:0; font-size:14px; line-height:1.5; color:var(--text2);}
+.salidoCard .btn{flex:0 0 auto!important; align-self:flex-start; height:40px!important; min-height:40px!important; padding:0 22px!important;}
+@media (max-width:760px){
+  html[data-salido] .salidoCard{margin:16px; padding:28px 22px 22px;}
+  .salidoCard .btn{align-self:stretch; height:46px!important; min-height:46px!important;}
+}
 </style>
 
 
@@ -10361,29 +10644,103 @@ html[data-arranque="recuperando"] .edoVac{display:none;}
 <!-- V48 · Supabase base experimental: login + Excel en nube + auditoría cloud -->
 
 
-<div class="cloudOverlay" id="cloudOverlay" aria-hidden="true">
-  <div class="cloudPanel">
-    <h2>Portfolio Oscar Cloud</h2>
-    <p id="cloudIntro">Acceso privado y sincronización del Excel con Supabase Storage.</p>
-    <div class="cloudForm" id="cloudForm">
-      <input id="cloudEmail" type="email" autocomplete="email" placeholder="Email" aria-label="Correo electrónico">
-      <input id="cloudPassword" type="password" autocomplete="current-password" placeholder="Contraseña" aria-label="Contraseña">
-      <div class="cloudFormActions">
-        <button class="btn primary" id="cloudDoLogin" type="button">Entrar</button>
-        <button class="btn" id="cloudClose" type="button">Cerrar</button>
+<div class="dlgDim" id="dlgDim" hidden>
+  <section class="dlg" id="dlg" role="dialog" aria-modal="true" aria-label="Entrar">
+    <button class="dlgX" id="dlgX" type="button" data-accion="cerrar" aria-label="Cerrar"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 4l10 10M14 4L4 14"></path></svg></button>
+
+    <form class="dlgPaso" data-paso="entrar" id="formEntrar" novalidate hidden>
+      <h2 class="dlgTitulo">Entrar</h2>
+      <div class="dlgCampo"><label for="cloudEmail">Correo</label><input id="cloudEmail" name="email" type="email" autocomplete="username" placeholder="Tu correo" required></div>
+      <div class="dlgCampo"><label for="cloudPassword">Contraseña</label><input id="cloudPassword" name="password" type="password" autocomplete="current-password" required></div>
+      <p class="dlgError" id="entrarError" role="alert" hidden></p>
+      <button class="btn primary" id="cloudDoLogin" type="submit">Entrar</button>
+    </form>
+
+    <form class="dlgPaso" data-paso="codigo" id="formCodigo" novalidate hidden>
+      <h2 class="dlgTitulo">Código de seguridad</h2>
+      <p class="dlgTexto">Escribe el código de 6 cifras que te da Contraseñas para portfolio.oscarvisa.com.</p>
+      <div class="dlgCampo"><label for="otpCode">Código</label><input id="otpCode" name="otp" class="dlgCodigo" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]*" placeholder="000000" aria-describedby="codigoError"><p class="dlgError" id="codigoError" role="alert" hidden></p></div>
+      <button class="btn primary" type="submit">Entrar</button>
+      <button class="dlgEnlace" type="button" data-accion="ir-reserva">Usar la clave de reserva</button>
+    </form>
+
+    <form class="dlgPaso" data-paso="reserva" id="formReserva" novalidate hidden>
+      <h2 class="dlgTitulo">Clave de reserva</h2>
+      <p class="dlgTexto">Escribe la clave que guardas en papel. Da igual si pones los espacios o no.</p>
+      <div class="dlgCampo"><label for="reserveKey">Clave de reserva</label><input id="reserveKey" name="reserva" class="dlgClaveCampo" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX" aria-describedby="reservaError"><p class="dlgError" id="reservaError" role="alert" hidden></p></div>
+      <button class="btn primary" type="submit">Entrar</button>
+      <button class="dlgEnlace" type="button" data-accion="ir-codigo">Volver al código</button>
+    </form>
+
+    <form class="dlgPaso dlgAncho" data-paso="alta1" id="formAlta1" novalidate hidden>
+      <span class="dlgEtiqueta">Paso 1 de 2</span>
+      <h2 class="dlgTitulo">Activar el código de seguridad</h2>
+      <p class="dlgTexto">Se hace una sola vez, desde el Mac. Contraseñas guardará el código y te lo ofrecerá al entrar, en el Mac y en el iPhone.</p>
+      <div class="dlgCampo">
+        <span class="dlgEtiqueta">1 · Añade esta clave en Contraseñas, en tu entrada de portfolio.oscarvisa.com, como clave de configuración del código.</span>
+        <div class="dlgFila dlgFilaClave"><div class="dlgClave" id="alta1Clave"></div><button class="btn" type="button" data-accion="copiar-clave" id="alta1Copiar">Copiar</button></div>
       </div>
+      <div class="dlgFila dlgFilaQr"><img class="dlgQr" id="alta1Qr" alt="Código QR de la clave de configuración"><p class="dlgTexto">O, si lo prefieres, desde el iPhone: en Contraseñas, al configurar el código, escanea este cuadro con la cámara.</p></div>
+      <div class="dlgCampo"><label for="alta1Codigo">2 · Escribe el primer código que te dé Contraseñas.</label><input id="alta1Codigo" name="otp" class="dlgCodigo" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]*" placeholder="000000" aria-describedby="alta1Error"><p class="dlgError" id="alta1Error" role="alert" hidden></p></div>
+      <button class="btn primary dlgIzq" type="submit">Activar</button>
+    </form>
+
+    <form class="dlgPaso dlgAncho" data-paso="alta2" id="formAlta2" novalidate hidden>
+      <span class="dlgEtiqueta">Paso 2 de 2</span>
+      <h2 class="dlgTitulo">Ahora, la clave de reserva</h2>
+      <p class="dlgTexto">Es tu llave de repuesto por si un día pierdes el Mac y el iPhone a la vez. Cópiala a mano en un papel y guárdalo en casa. No la guardes ni en el ordenador ni en el móvil.</p>
+      <div class="dlgClave dlgClaveGrande" id="alta2Clave"></div>
+      <div class="dlgCampo"><label for="alta2Copia">Para comprobar que está bien copiada, escríbela aquí leyendo el papel.</label><input id="alta2Copia" name="reserva" class="dlgClaveCampo" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX" aria-describedby="alta2Error"><p class="dlgError" id="alta2Error" role="alert" hidden></p></div>
+      <button class="btn primary dlgIzq" type="submit">Comprobar y terminar</button>
+    </form>
+
+    <div class="dlgPaso" data-paso="estado" hidden>
+      <h2 class="dlgTitulo">Código de seguridad</h2>
+      <div class="dlgEstado"><span>Código de 6 cifras</span><strong id="estadoPrincipal"></strong></div>
+      <div class="dlgEstado"><span>Clave de reserva</span><strong id="estadoReserva"></strong></div>
+      <p class="dlgTexto" id="estadoTexto"></p>
+      <button class="btn primary dlgIzq" type="button" id="estadoAccion" hidden></button>
     </div>
-    <div class="cloudStatusLine" id="cloudStatusLine">Supabase todavía no está configurado.</div>
-  </div>
+
+    <div class="dlgPaso" data-paso="salir" hidden>
+      <div class="dlgCabeza"><span class="bullet bWarn" aria-hidden="true"></span><h2 class="dlgTitulo">Este libro no está guardado en la nube</h2></div>
+      <p class="dlgTexto">Lo importaste aquí y no lo has guardado. Si sales, se borra de este navegador. El archivo Excel original no se toca.</p>
+      <div class="dlgFila"><button class="btn primary" type="button" data-accion="cerrar">Cancelar</button><button class="btn" type="button" data-accion="salir-igualmente">Salir igualmente</button></div>
+    </div>
+
+    <div class="dlgPaso" data-paso="aviso" hidden>
+      <div class="dlgCabeza"><span class="bullet bWarn" id="avisoPunto" aria-hidden="true"></span><h2 class="dlgTitulo" id="avisoTitulo"></h2></div>
+      <p class="dlgTexto" id="avisoTexto"></p>
+      <button class="btn primary dlgIzq" type="button" id="avisoAccion" data-accion="aviso-accion"></button>
+    </div>
+  </section>
 </div>
 
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.js" integrity="sha384-rwykjmWNwVxboyFmvK9OXN0wj9hnMHA2aAHtits54DuACyCq0M2PrSNxhRb+hvXT" crossorigin="anonymous"></script>
 <script>
 /*
-  Portfolio Oscar · Supabase limpia
-  1) Sustituye SUPABASE_URL y SUPABASE_ANON_KEY por los datos de tu proyecto.
-  2) Crea un bucket privado llamado: portfolio-excel
-  3) Crea tu usuario en Supabase Auth.
+  Portfolio Oscar · Supabase · sesión, segundo factor, salida y avisos.
+  v175.93 · bloque Supabase, lote 3 + menú en la columna (maqueta aprobada por Óscar el
+  16/10/2026, `docs/maquetas/lote3_menu/`; recorrido y fuentes en
+  `docs/bloque_supabase_lote3_fase0.md`).
+
+  · ENTRAR es un formulario de verdad: Intro entra, y los campos llevan `username`,
+    `current-password` y `one-time-code`. Si la cuenta tiene código y la sesión no lo ha
+    pasado, la misma ventana pide el código (o la clave de reserva).
+  · LA RESERVA es un segundo factor TOTP. La web calcula el código con la clave tecleada
+    —con o sin espacios— y no guarda la clave en ningún sitio: vive en una variable
+    mientras la ventana está abierta y sólo viaja el código de 6 cifras.
+  · «SALIR» cierra sólo este aparato (`scope: 'local'`); «Salir en todos los aparatos»,
+    todos (`'global'`). Las dos borran del navegador todo lo del portfolio y dejan la
+    pantalla «Has salido». Si el libro en pantalla se importó y no se ha guardado en la
+    nube desde entonces, «Salir» avisa antes. Una sesión que se pierde sin «Salir» se
+    trata igual.
+  · AL ENTRAR, si no hay libro en pantalla, se carga el de la nube solo.
+  · LOS PROBLEMAS salen en una ventana con texto, botón de acción y cruz; al cerrarla
+    queda en la columna un punto con una etiqueta corta hasta que se resuelve. Cuando todo
+    va bien, ninguna ventana.
+  · TODO DELEGADO: ningún botón lleva su propio escuchador (presupuesto de
+    `verify_hints_cost`).
 */
 const PORTFOLIO_SUPABASE_CONFIG = {
   url: 'https://epkqzpjypnkblghlthyq.supabase.co',
@@ -10391,116 +10748,519 @@ const PORTFOLIO_SUPABASE_CONFIG = {
   bucket: 'portfolio-excel',
   fileName: '01_Portfolio_Oscar.xlsx'
 };
+// El emisor del código: el dominio de la web. Apple (WWDC21): «an issuer field that you
+// should set to your domain name. iCloud Keychain uses this field to suggest an account».
+const CODIGO_EMISOR = 'portfolio.oscarvisa.com';
+const FACTOR_PRINCIPAL = 'Contraseñas';
+const FACTOR_RESERVA = 'Reserva en papel';
+// #85 · LO QUE «SALIR» BORRA: lo del portfolio según el inventario del lote 2
+// (`scripts/medicion/f83/inventario_almacen.py`): las claves `portfolio…` de la web, de
+// todas sus versiones, y las `sb-<ref>-…` de supabase-js. En este origen no vive otra web.
+const CLAVES_DEL_PORTFOLIO = [/^portfolio/, /^sb-epkqzpjypnkblghlthyq-/];
+// La pantalla «Has salido» se decide en la cabecera, antes de pintar, con esta marca de
+// UN SOLO USO en `sessionStorage`: se pone justo antes de recargar y se quita al leerla.
+const MARCA_SALIDA = 'salida:portfolio';
+const CLAVE_SESION_SUPABASE = 'sb-epkqzpjypnkblghlthyq-auth-token';
 
 let portfolioSupabase = null;
 let portfolioCloudSession = null;
+let saliendo = false;          // la salida la ha pedido Óscar: no es una sesión perdida
+let salidaPendiente = null;    // el alcance que espera al aviso «sin guardar en la nube»
+let altaEnCurso = null;        // {id, secreto}: SÓLO en memoria, mientras dura el paso
+let pasoAbierto = null;
+let alCerrarPaso = null;
+let avisoAbierto = null;
+const avisosActivos = new Map();
 
 function isSupabaseConfigured(){
   return PORTFOLIO_SUPABASE_CONFIG.url.startsWith('https://') && PORTFOLIO_SUPABASE_CONFIG.anonKey.length > 40;
 }
-function cloudSetLine(text, cls=''){
-  const el=document.getElementById('cloudStatusLine');
-  if(!el) return;
-  el.textContent=text;
-  el.className='cloudStatusLine ' + cls;
+
+/* ===== RFC 6238 · el código de la clave de reserva, calculado aquí ===== */
+const BASE32 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+function normalizaClave(texto){
+  return String(texto || '').replace(/[\s-]/g, '').replace(/=+$/, '').toUpperCase();
 }
+function base32Decodifica(texto){
+  const s = normalizaClave(texto);
+  let bits = 0, valor = 0;
+  const salida = [];
+  for(const ch of s){
+    const i = BASE32.indexOf(ch);
+    if(i < 0) throw new Error('clave con caracteres que no son base32');
+    valor = ((valor << 5) | i) & 0xffff;
+    bits += 5;
+    if(bits >= 8){ salida.push((valor >>> (bits - 8)) & 0xff); bits -= 8; }
+  }
+  return new Uint8Array(salida);
+}
+async function codigoTotp(claveBytes, segundos, cifras=6, periodo=30){
+  const contador = Math.floor(segundos / periodo);
+  const mensaje = new ArrayBuffer(8);
+  const vista = new DataView(mensaje);
+  vista.setUint32(0, Math.floor(contador / 4294967296));
+  vista.setUint32(4, contador >>> 0);
+  const clave = await crypto.subtle.importKey('raw', claveBytes, {name:'HMAC', hash:'SHA-1'}, false, ['sign']);
+  const h = new Uint8Array(await crypto.subtle.sign('HMAC', clave, mensaje));
+  const o = h[h.length - 1] & 15;
+  const n = ((h[o] & 127) << 24) | (h[o+1] << 16) | (h[o+2] << 8) | h[o+3];
+  return String(n % Math.pow(10, cifras)).padStart(cifras, '0');
+}
+function enGrupos(secreto, porLinea=0){
+  const grupos = normalizaClave(secreto).match(/.{1,4}/g) || [];
+  if(!porLinea) return grupos.join(' ');
+  const lineas = [];
+  for(let i=0; i<grupos.length; i+=porLinea) lineas.push(grupos.slice(i, i+porLinea).join(' '));
+  return lineas.join('\n');
+}
+
+/* ===== el menú de la columna ===== */
+function abreMenu(){
+  const pop=document.getElementById('menuPop'), btn=document.getElementById('menuBtn');
+  if(!pop || !btn) return;
+  pop.hidden=false;
+  btn.setAttribute('aria-expanded','true');
+  btn.setAttribute('aria-label','Cerrar menú de acciones');
+  const primero=pop.querySelector('.menuItem:not([hidden]):not([disabled])');
+  if(primero) primero.focus();
+}
+function cierraMenu(devolverFoco){
+  const pop=document.getElementById('menuPop'), btn=document.getElementById('menuBtn');
+  if(!pop || pop.hidden) return;
+  pop.hidden=true;
+  if(btn){
+    btn.setAttribute('aria-expanded','false');
+    btn.setAttribute('aria-label','Abrir menú de acciones');
+    if(devolverFoco) btn.focus();
+  }
+}
+
+/* ===== la ventana única ===== */
+function abreDialogo(paso, opciones={}){
+  const dim=document.getElementById('dlgDim'), dlg=document.getElementById('dlg');
+  if(!dim || !dlg) return;
+  cierraMenu(false);
+  dlg.querySelectorAll('[data-paso]').forEach(s=>{ s.hidden = s.dataset.paso !== paso; });
+  const seccion=dlg.querySelector(`[data-paso="${paso}"]`);
+  dlg.classList.toggle('dlgAncho', !!seccion?.classList.contains('dlgAncho'));
+  dlg.setAttribute('aria-label', seccion?.querySelector('.dlgTitulo')?.textContent?.trim() || 'Aviso');
+  dim.hidden=false;
+  document.documentElement.classList.add('dlgAbierto');
+  pasoAbierto=paso;
+  alCerrarPaso=opciones.alCerrar || null;
+  const foco=seccion?.querySelector('input:not([type=hidden])') || seccion?.querySelector('button.primary') || dlg.querySelector('#dlgX');
+  if(foco) foco.focus();
+}
+function cierraDialogo(motivo){
+  const dim=document.getElementById('dlgDim');
+  if(!dim || dim.hidden) return;
+  dim.hidden=true;
+  document.documentElement.classList.remove('dlgAbierto');
+  const paso=pasoAbierto, fn=alCerrarPaso;
+  pasoAbierto=null; alCerrarPaso=null; avisoAbierto=null;
+  document.querySelectorAll('#dlg .dlgError').forEach(e=>{ e.hidden=true; e.textContent=''; });
+  document.querySelectorAll('#dlg input[aria-invalid]').forEach(e=>e.removeAttribute('aria-invalid'));
+  ['otpCode','reserveKey','alta1Codigo','alta2Copia'].forEach(id=>{ const e=document.getElementById(id); if(e) e.value=''; });
+  // la clave del alta no se queda en ningún sitio: tampoco escrita en la ventana cerrada
+  ['alta1Clave','alta2Clave'].forEach(id=>{ const e=document.getElementById(id); if(e) e.textContent=''; });
+  const qr=document.getElementById('alta1Qr'); if(qr) qr.removeAttribute('src');
+  if(motivo!=='hecho' && typeof fn==='function') fn(paso);
+}
+function errorEnPaso(idError, texto, idCampo){
+  const e=document.getElementById(idError);
+  if(e){ e.textContent=texto; e.hidden=false; }
+  const c=idCampo ? document.getElementById(idCampo) : null;
+  if(c){ c.setAttribute('aria-invalid','true'); c.focus(); if(typeof c.select==='function') c.select(); }
+}
+function limpiaErrorEnPaso(idError, idCampo){
+  const e=document.getElementById(idError);
+  if(e){ e.hidden=true; e.textContent=''; }
+  const c=idCampo ? document.getElementById(idCampo) : null;
+  if(c) c.removeAttribute('aria-invalid');
+}
+function ocupado(form, si){
+  form?.querySelectorAll('button[type=submit]').forEach(b=>{ b.disabled=!!si; });
+}
+
+/* ===== avisos: ventana con texto, acción y cruz; al cerrar, un punto en la columna ===== */
+function avisar(clave, aviso, abrir=true){
+  avisosActivos.set(clave, aviso);
+  pintaAvisos();
+  if(abrir) abreAviso(clave);
+}
+function abreAviso(clave){
+  const a=avisosActivos.get(clave);
+  if(!a) return;
+  const punto=document.getElementById('avisoPunto');
+  if(punto) punto.className='bullet ' + (a.nivel==='bad' ? 'bBad' : 'bWarn');
+  document.getElementById('avisoTitulo').textContent=a.titulo;
+  document.getElementById('avisoTexto').textContent=a.texto;
+  const accion=document.getElementById('avisoAccion');
+  accion.textContent=a.accion?.etiqueta || 'Entendido';
+  abreDialogo('aviso');
+  avisoAbierto=clave;
+}
+function resuelveAviso(clave){
+  if(!avisosActivos.has(clave)) return;
+  avisosActivos.delete(clave);
+  if(pasoAbierto==='aviso' && avisoAbierto===clave) cierraDialogo('hecho');
+  pintaAvisos();
+}
+function pintaAvisos(){
+  const caja=document.getElementById('sideAlerts');
+  if(caja){
+    caja.innerHTML=[...avisosActivos.entries()].map(([clave,a])=>
+      `<button type="button" class="sideAlert ${a.nivel==='bad'?'sideAlertBad':'sideAlertWarn'}" data-accion="ver-aviso" data-clave="${escHtml(clave)}"><span class="bullet ${a.nivel==='bad'?'bBad':'bWarn'}" aria-hidden="true"></span>${escHtml(a.corto)}</button>`
+    ).join('');
+  }
+  try{ window.refrescaHojaMovil?.(); }catch(_){}
+}
+function avisoPrincipal(){
+  for(const nivel of ['bad','warn']) for(const [,a] of avisosActivos) if(a.nivel===nivel) return a;
+  return null;
+}
+// Los textos de los avisos, en un solo sitio. «Falta el código» es el de la maqueta.
+const AVISOS = {
+  codigo: () => ({nivel:'warn', corto:'Falta el código', titulo:'Falta el código de seguridad',
+    texto:'Has entrado con tu contraseña, pero falta el código de 6 cifras. Sin él no se pueden cargar ni guardar tus datos.',
+    accion:{etiqueta:'Escribir el código', hace:'codigo'}}),
+  nubeCargar: () => ({nivel:'bad', corto:'No se ha cargado', titulo:'No se ha podido cargar el libro de la nube',
+    texto:'Lo que tienes en pantalla no ha cambiado. Vuelve a probar en un momento.',
+    accion:{etiqueta:'Reintentar', hace:'cargar'}}),
+  nubeVacia: () => ({nivel:'warn', corto:'Nube sin libro', titulo:'No hay ningún libro en la nube',
+    texto:'Importa el Excel y guárdalo con «Guardar»: así lo tendrás en el Mac y en el iPhone.',
+    accion:{etiqueta:'Importar', hace:'importar'}}),
+  nubeGuardar: () => ({nivel:'bad', corto:'No se ha guardado', titulo:'No se ha podido guardar en la nube',
+    texto:'El libro sigue en pantalla y en este navegador. Vuelve a probar en un momento.',
+    accion:{etiqueta:'Reintentar', hace:'guardar'}}),
+  sinLibroGuardar: () => ({nivel:'warn', corto:'Sin libro', titulo:'No hay ningún libro que guardar',
+    texto:'Importa el Excel primero; después podrás guardarlo en la nube.',
+    accion:{etiqueta:'Importar', hace:'importar'}}),
+};
+
+/* ===== la sesión ===== */
+async function nivelSesion(){
+  if(!portfolioSupabase || !portfolioCloudSession) return {actual:null, siguiente:null};
+  try{
+    const {data}=await portfolioSupabase.auth.mfa.getAuthenticatorAssuranceLevel();
+    return {actual:data?.currentLevel || null, siguiente:data?.nextLevel || null};
+  }catch(_){ return {actual:null, siguiente:null}; }
+}
+function faltaCodigo(n){ return n.siguiente==='aal2' && n.actual!=='aal2'; }
+async function factores(){
+  const {data, error}=await portfolioSupabase.auth.mfa.listFactors();
+  if(error) throw error;
+  return {todos:data?.all || [], verificados:data?.totp || []};
+}
+function factorPrincipal(lista){ return lista.find(f=>f.friendly_name===FACTOR_PRINCIPAL) || lista.find(f=>f.friendly_name!==FACTOR_RESERVA) || null; }
+function factorReserva(lista){ return lista.find(f=>f.friendly_name===FACTOR_RESERVA) || null; }
+async function sesionActual(){
+  try{ portfolioCloudSession=(await portfolioSupabase.auth.getSession())?.data?.session || portfolioCloudSession; }catch(_){}
+  return portfolioCloudSession;
+}
+
 function cloudUpdateButtons(){
   const configured=isSupabaseConfigured();
   const logged=!!portfolioCloudSession?.user;
   document.getElementById('cloudSaveBtn')?.toggleAttribute('disabled', !(configured && logged));
   document.getElementById('cloudLoadBtn')?.toggleAttribute('disabled', !(configured && logged));
   const loginBtn=document.getElementById('cloudLoginBtn');
-  if(loginBtn) loginBtn.textContent = logged ? 'Salir' : (configured ? 'Entrar' : 'Cloud');
+  if(loginBtn) loginBtn.textContent = logged ? 'Salir' : 'Entrar';
+  ['cloudLogoutAllBtn','securityBtn','menuSepSeguridad'].forEach(id=>{ const e=document.getElementById(id); if(e) e.hidden=!logged; });
   updateCloudAudit();
   updateDataStatus?.();
+  try{ window.refrescaHojaMovil?.(); }catch(_){}
 }
+// Compatibilidad: el Benchmark pide «Entrar» cuando no hay sesión (`benchmarkLocalFail`).
 function cloudShow(){
-  const overlay=document.getElementById('cloudOverlay');
-  if(!overlay) return;
-  overlay.classList.add('active');
-  overlay.setAttribute('aria-hidden','false');
-  if(!isSupabaseConfigured()){
-    document.getElementById('cloudIntro').textContent='Primero hay que pegar la URL y la anon key de Supabase dentro del archivo HTML.';
-    cloudSetLine('Configuración pendiente. La app estable sigue funcionando con Excel local.', 'warn');
-  }else if(portfolioCloudSession?.user){
-    document.getElementById('cloudIntro').textContent='Sesión iniciada. Ya puedes guardar o cargar el Excel desde la nube.';
-    cloudSetLine('Conectado como ' + portfolioCloudSession.user.email, 'ok');
-  }else{
-    document.getElementById('cloudIntro').textContent='Acceso privado para sincronizar el Excel con Supabase Storage.';
-    cloudSetLine('Introduce tu email y contraseña de Supabase.', '');
+  if(portfolioCloudSession?.user){
+    nivelSesion().then(n=>{ if(faltaCodigo(n)) abreCodigo(); });
+    return;
   }
+  abreDialogo('entrar');
 }
-function cloudHide(){
-  const overlay=document.getElementById('cloudOverlay');
-  overlay?.classList.remove('active');
-  overlay?.setAttribute('aria-hidden','true');
-}
+function cloudHide(){ cierraDialogo('hecho'); }
 function cloudFilePath(){
   const uid=portfolioCloudSession?.user?.id || 'sin-usuario';
   return `${uid}/${PORTFOLIO_SUPABASE_CONFIG.fileName}`;
 }
+
 async function cloudInit(){
+  if(!isSupabaseConfigured()){ cloudUpdateButtons(); return; }
   try{
-    if(!isSupabaseConfigured()){
-      cloudUpdateButtons();
-      return;
-    }
+    // ¿había sesión guardada al abrir? Si supabase-js la descarta al arrancar (no ha podido
+    // renovarla), es una sesión PERDIDA, y se trata igual que «Salir» (decisión 6).
+    let habiaSesion=false;
+    try{ habiaSesion = localStorage.getItem(CLAVE_SESION_SUPABASE) !== null; }catch(_){}
     portfolioSupabase = supabase.createClient(PORTFOLIO_SUPABASE_CONFIG.url, PORTFOLIO_SUPABASE_CONFIG.anonKey);
-    const { data } = await portfolioSupabase.auth.getSession();
+    const { data, error } = await portfolioSupabase.auth.getSession();
     portfolioCloudSession = data?.session || null;
-    portfolioSupabase.auth.onAuthStateChange((_event, session)=>{
+    portfolioSupabase.auth.onAuthStateChange((evento, session)=>{
+      const habia=!!portfolioCloudSession?.user;
       portfolioCloudSession=session;
       cloudUpdateButtons();
+      if(evento==='SIGNED_OUT' && habia && !saliendo) setTimeout(()=>salidaLocal(), 0);
+      if(evento==='MFA_CHALLENGE_VERIFIED') resuelveAviso('codigo');
     });
     cloudUpdateButtons();
+    if(!error && habiaSesion && !portfolioCloudSession){ salidaLocal(); return; }
+    if(portfolioCloudSession?.user){
+      const n=await nivelSesion();
+      if(faltaCodigo(n)) avisar('codigo', AVISOS.codigo());
+      else if(!importedWorkbook && !recuperandoLibro()) await cloudLoadWorkbook({automatica:true});
+    }
   }catch(err){
     console.warn('Error iniciando Supabase:', err);
-    cloudSetLine('Error iniciando Supabase: ' + (err.message || err), 'bad');
     updateCloudAudit('error'); normalizeSupabaseAuditLabels();
   }
 }
+
+/* ----- entrar: contraseña, y el código si la cuenta lo tiene ----- */
+function textoErrorEntrada(err){
+  const codigo=err?.code || '', st=Number(err?.status);
+  if(codigo==='invalid_credentials' || /invalid login credentials/i.test(err?.message || '')) return 'El correo o la contraseña no son correctos.';
+  if(st===429 || codigo==='over_request_rate_limit') return 'Demasiados intentos. Espera un momento y vuelve a probar.';
+  return 'No se ha podido entrar. Vuelve a probar en un momento.';
+}
+function textoErrorCodigo(err){
+  const codigo=err?.code || '', st=Number(err?.status);
+  if(st===429 || codigo==='over_request_rate_limit') return 'Demasiados intentos. Espera un momento y vuelve a probar.';
+  if(codigo==='mfa_verification_failed' || codigo==='mfa_challenge_expired' || st===422) return 'Ese código no vale. Escribe el que muestra ahora Contraseñas: cambia cada 30 segundos.';
+  return 'No se ha podido comprobar el código. Vuelve a probar en un momento.';
+}
 async function cloudLogin(){
-  if(!isSupabaseConfigured()){
-    cloudShow();
-    return;
-  }
+  const form=document.getElementById('formEntrar');
+  limpiaErrorEnPaso('entrarError');
+  if(!isSupabaseConfigured() || !portfolioSupabase){ errorEnPaso('entrarError','No se puede conectar con el servidor ahora mismo. Vuelve a probar en un momento.'); return; }
   const email=document.getElementById('cloudEmail')?.value?.trim();
   const password=document.getElementById('cloudPassword')?.value || '';
-  if(!email || !password){ cloudSetLine('Falta email o contraseña.', 'warn'); return; }
+  if(!email || !password){ errorEnPaso('entrarError','Escribe tu correo y tu contraseña.', !email ? 'cloudEmail' : 'cloudPassword'); return; }
+  ocupado(form, true);
   try{
-    cloudSetLine('Conectando...', '');
     const { data, error } = await portfolioSupabase.auth.signInWithPassword({email,password});
     if(error) throw error;
     portfolioCloudSession=data.session;
-    const passwordInput=document.getElementById('cloudPassword');
-    if(passwordInput) passwordInput.value='';
-    cloudSetLine('Conectado correctamente.', 'ok');
+    document.getElementById('cloudPassword').value='';
     cloudUpdateButtons();
-    setTimeout(cloudHide, 600);
+    const n=await nivelSesion();
+    if(faltaCodigo(n)){ abreCodigo(); return; }
+    cierraDialogo('hecho');
+    await sesionCompleta();
   }catch(err){
-    cloudSetLine('No se ha podido iniciar sesión: ' + (err.message || err), 'bad');
+    errorEnPaso('entrarError', textoErrorEntrada(err), 'cloudPassword');
+  }finally{ ocupado(form, false); }
+}
+function abreCodigo(){
+  // Cerrar sin código deja la sesión a medias: queda el aviso en la columna.
+  abreDialogo('codigo', {alCerrar:()=>avisar('codigo', AVISOS.codigo(), false)});
+}
+async function enviaCodigo(){
+  const form=document.getElementById('formCodigo');
+  const campo=document.getElementById('otpCode');
+  const codigo=(campo.value || '').replace(/\D/g,'');
+  limpiaErrorEnPaso('codigoError','otpCode');
+  if(codigo.length!==6){ errorEnPaso('codigoError','Escribe las 6 cifras del código.','otpCode'); return; }
+  ocupado(form, true);
+  try{
+    const {verificados}=await factores();
+    const f=factorPrincipal(verificados);
+    if(!f){ errorEnPaso('codigoError','Esta cuenta no tiene el código de seguridad activado.','otpCode'); return; }
+    const {error}=await portfolioSupabase.auth.mfa.challengeAndVerify({factorId:f.id, code:codigo});
+    if(error) throw error;
+    await sesionActual();
+    cierraDialogo('hecho');
+    cloudUpdateButtons();
+    await sesionCompleta();
+  }catch(err){
+    errorEnPaso('codigoError', textoErrorCodigo(err), 'otpCode');
+  }finally{ ocupado(form, false); }
+}
+async function enviaReserva(){
+  const form=document.getElementById('formReserva');
+  const campo=document.getElementById('reserveKey');
+  limpiaErrorEnPaso('reservaError','reserveKey');
+  let bytes;
+  try{ bytes=base32Decodifica(campo.value); }
+  catch(_){ errorEnPaso('reservaError','Esa clave tiene caracteres que no son de la clave: sólo letras de la A a la Z y cifras del 2 al 7.','reserveKey'); return; }
+  if(bytes.length<10){ errorEnPaso('reservaError','A esa clave le faltan caracteres: revisa el papel.','reserveKey'); return; }
+  ocupado(form, true);
+  try{
+    const {verificados}=await factores();
+    const f=factorReserva(verificados);
+    if(!f){ errorEnPaso('reservaError','Esta cuenta no tiene clave de reserva.','reserveKey'); return; }
+    const codigo=await codigoTotp(bytes, Math.floor(Date.now()/1000));
+    const {error}=await portfolioSupabase.auth.mfa.challengeAndVerify({factorId:f.id, code:codigo});
+    if(error){
+      const st=Number(error?.status);
+      errorEnPaso('reservaError', (st===429 || error?.code==='over_request_rate_limit') ? 'Demasiados intentos. Espera un momento y vuelve a probar.' : 'Esa clave no es la de reserva de esta cuenta: revisa el papel.', 'reserveKey');
+      return;
+    }
+    campo.value='';
+    await sesionActual();
+    cierraDialogo('hecho');
+    cloudUpdateButtons();
+    await sesionCompleta();
+  }catch(err){
+    errorEnPaso('reservaError','No se ha podido comprobar la clave. Vuelve a probar en un momento.','reserveKey');
+  }finally{ ocupado(form, false); }
+}
+async function sesionCompleta(){
+  resuelveAviso('codigo');
+  document.documentElement.removeAttribute('data-salido');
+  if(!importedWorkbook && !recuperandoLibro()) await cloudLoadWorkbook({automatica:true});
+}
+
+/* ----- el código de seguridad: estado, activar y añadir la reserva, de uno en uno ----- */
+async function abreSeguridad(){
+  if(!portfolioCloudSession?.user){ abreDialogo('entrar'); return; }
+  const n=await nivelSesion();
+  if(faltaCodigo(n)){ abreCodigo(); return; }
+  try{
+    const {verificados}=await factores();
+    const p=factorPrincipal(verificados), r=factorReserva(verificados);
+    document.getElementById('estadoPrincipal').textContent = p ? 'Activado' : 'Sin activar';
+    document.getElementById('estadoPrincipal').className = p ? 'green' : 'yellow';
+    document.getElementById('estadoReserva').textContent = r ? 'Añadida' : 'Sin añadir';
+    document.getElementById('estadoReserva').className = r ? 'green' : 'yellow';
+    const accion=document.getElementById('estadoAccion');
+    const texto=document.getElementById('estadoTexto');
+    if(!p){ accion.textContent='Activar'; accion.dataset.accion='alta1'; accion.hidden=false; texto.textContent='Para entrar hará falta, además de la contraseña, el código de 6 cifras que genera Contraseñas.'; }
+    else if(!r){ accion.textContent='Añadir la reserva'; accion.dataset.accion='alta2'; accion.hidden=false; texto.textContent='Falta la clave de reserva en papel: tu llave de repuesto si un día pierdes el Mac y el iPhone a la vez.'; }
+    else { accion.hidden=true; delete accion.dataset.accion; texto.textContent='Todo en orden: el código y la clave de reserva están activados.'; }
+    abreDialogo('estado');
+  }catch(_){
+    avisar('nubeCargar', {...AVISOS.nubeCargar(), corto:'Sin conexión', titulo:'No se ha podido consultar el código de seguridad', texto:'Vuelve a probar en un momento.', accion:{etiqueta:'Reintentar', hace:'seguridad'}});
   }
 }
-async function cloudLogout(){
-  if(!portfolioSupabase) return;
-  await portfolioSupabase.auth.signOut();
-  portfolioCloudSession=null;
-  cloudUpdateButtons();
-  cloudSetLine('Sesión cerrada.', '');
+async function quitaSinVerificar(){
+  const {todos}=await factores();
+  for(const f of todos.filter(f=>f.status!=='verified')){
+    try{ await portfolioSupabase.auth.mfa.unenroll({factorId:f.id}); }catch(_){}
+  }
 }
-function cloudRequireReady(){
-  if(!isSupabaseConfigured()){ cloudShow(); return false; }
-  if(!portfolioSupabase || !portfolioCloudSession){ cloudShow(); return false; }
+async function empiezaAlta(paso){
+  const principal = paso==='alta1';
+  try{
+    await quitaSinVerificar();
+    const {data, error}=await portfolioSupabase.auth.mfa.enroll({factorType:'totp', friendlyName: principal ? FACTOR_PRINCIPAL : FACTOR_RESERVA, issuer:CODIGO_EMISOR});
+    if(error) throw error;
+    altaEnCurso={id:data.id, secreto:data.totp.secret};
+    if(principal){
+      document.getElementById('alta1Clave').textContent=enGrupos(altaEnCurso.secreto);
+      // supabase-js antepone `data:image/svg+xml;utf-8,` al SVG sin codificar; un `#` del SVG
+      // cortaría la dirección. Se codifica entero.
+      const qr=String(data.totp.qr_code || '');
+      const svg=qr.replace(/^data:image\/svg\+xml;utf-8,/, '');
+      document.getElementById('alta1Qr').src='data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+      document.getElementById('alta1Copiar').textContent='Copiar';
+    }else{
+      document.getElementById('alta2Clave').textContent=enGrupos(altaEnCurso.secreto, 4);
+    }
+    abreDialogo(paso, {alCerrar:abandonaAlta});
+  }catch(err){
+    altaEnCurso=null;
+    avisar('alta', {nivel:'bad', corto:'Alta sin hacer', titulo:'No se ha podido empezar el alta del código',
+      texto: Number(err?.status)===403 || err?.code==='insufficient_aal' ? 'Antes hay que entrar con el código de seguridad.' : 'Vuelve a probar en un momento.',
+      accion:{etiqueta:'Reintentar', hace:'seguridad'}});
+  }
+}
+function abandonaAlta(){
+  const pendiente=altaEnCurso;
+  altaEnCurso=null;
+  if(pendiente && portfolioSupabase) portfolioSupabase.auth.mfa.unenroll({factorId:pendiente.id}).catch(()=>{});
+}
+async function enviaAlta1(){
+  const form=document.getElementById('formAlta1');
+  const codigo=(document.getElementById('alta1Codigo').value || '').replace(/\D/g,'');
+  limpiaErrorEnPaso('alta1Error','alta1Codigo');
+  if(!altaEnCurso){ errorEnPaso('alta1Error','El alta ha caducado. Ciérrala y vuelve a empezar.'); return; }
+  if(codigo.length!==6){ errorEnPaso('alta1Error','Escribe las 6 cifras del código.','alta1Codigo'); return; }
+  ocupado(form, true);
+  try{
+    const {error}=await portfolioSupabase.auth.mfa.challengeAndVerify({factorId:altaEnCurso.id, code:codigo});
+    if(error) throw error;
+    altaEnCurso=null;
+    await sesionActual();
+    cierraDialogo('hecho');
+    cloudUpdateButtons();
+    resuelveAviso('alta');
+    await empiezaAlta('alta2');
+  }catch(err){
+    errorEnPaso('alta1Error', textoErrorCodigo(err), 'alta1Codigo');
+  }finally{ ocupado(form, false); }
+}
+async function enviaAlta2(){
+  const form=document.getElementById('formAlta2');
+  const copia=normalizaClave(document.getElementById('alta2Copia').value);
+  limpiaErrorEnPaso('alta2Error','alta2Copia');
+  if(!altaEnCurso){ errorEnPaso('alta2Error','El alta ha caducado. Ciérrala y vuelve a empezar.'); return; }
+  if(copia!==normalizaClave(altaEnCurso.secreto)){ errorEnPaso('alta2Error','No coincide con la clave de arriba. Revisa el papel letra a letra.','alta2Copia'); return; }
+  ocupado(form, true);
+  try{
+    const codigo=await codigoTotp(base32Decodifica(copia), Math.floor(Date.now()/1000));
+    const {error}=await portfolioSupabase.auth.mfa.challengeAndVerify({factorId:altaEnCurso.id, code:codigo});
+    if(error) throw error;
+    altaEnCurso=null;
+    await sesionActual();
+    cierraDialogo('hecho');
+    await abreSeguridad();
+  }catch(err){
+    errorEnPaso('alta2Error','No se ha podido comprobar la clave. Vuelve a probar en un momento.','alta2Copia');
+  }finally{ ocupado(form, false); }
+}
+
+/* ----- salir ----- */
+function libroSinGuardarEnNube(){
+  if(!importedWorkbook || importedData?.tipo!=='Importado') return false;
+  let subida='';
+  try{ subida=localStorage.getItem('portfolioOscar:lastCloudUpload:v1') || ''; }catch(_){}
+  return !(subida && importedData?.fecha && subida >= importedData.fecha);
+}
+function borraTodoDelPortfolio(){
+  for(const almacen of [localStorage, sessionStorage]){
+    try{
+      const claves=[];
+      for(let i=0;i<almacen.length;i++){ const k=almacen.key(i); if(k && CLAVES_DEL_PORTFOLIO.some(r=>r.test(k))) claves.push(k); }
+      claves.forEach(k=>almacen.removeItem(k));
+    }catch(_){}
+  }
+}
+function salidaLocal(){
+  saliendo=true;
+  borraTodoDelPortfolio();
+  try{ sessionStorage.setItem(MARCA_SALIDA, '1'); }catch(_){}
+  location.reload();
+}
+async function cloudLogout(alcance='local'){
+  saliendo=true;
+  try{ if(portfolioSupabase) await portfolioSupabase.auth.signOut({scope:alcance}); }catch(_){}
+  salidaLocal();
+}
+function pideSalida(alcance){
+  if(libroSinGuardarEnNube()){
+    salidaPendiente=alcance;
+    abreDialogo('salir', {alCerrar:()=>{ salidaPendiente=null; }});
+    return;
+  }
+  cloudLogout(alcance);
+}
+
+/* ----- la nube ----- */
+function esNoEncontrado(err){
+  const st=String(err?.statusCode ?? err?.status ?? '');
+  return st==='404' || /not.?found|does not exist/i.test(err?.message || '') || err?.error==='not_found';
+}
+async function cloudRequireReady(){
+  if(!isSupabaseConfigured() || !portfolioSupabase || !portfolioCloudSession){ abreDialogo('entrar'); return false; }
+  const n=await nivelSesion();
+  if(faltaCodigo(n)){ avisar('codigo', AVISOS.codigo()); return false; }
   return true;
 }
 async function cloudSaveWorkbook(){
-  if(!cloudRequireReady()) return;
+  if(!(await cloudRequireReady())) return;
   try{
     const buffer = importedWorkbook ? importedBuffer : null;   // v175.92 · ficha #67 · sólo sube el libro en pantalla
-    if(!buffer){
-      alert('Primero importa el Excel. Después podrás guardarlo en la nube.');
-      return;
-    }
+    if(!buffer){ avisar('sinLibroGuardar', AVISOS.sinLibroGuardar()); return; }
     const blob = new Blob([buffer], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
     const { error } = await portfolioSupabase.storage
       .from(PORTFOLIO_SUPABASE_CONFIG.bucket)
@@ -10509,19 +11269,19 @@ async function cloudSaveWorkbook(){
     const nowIso = new Date().toISOString();
     localStorage.setItem('portfolioOscar:lastCloudSync:v1', nowIso);
     localStorage.setItem('portfolioOscar:lastCloudUpload:v1', nowIso);
+    resuelveAviso('nubeGuardar'); resuelveAviso('sinLibroGuardar');
     updateDataStatus?.();
-    setStatus?.(true, 'Excel guardado en nube');
-    cloudSetLine('Excel guardado en Supabase Storage.', 'ok');
     updateCloudAudit('ok');
   }catch(err){
     console.error(err);
-    setStatus?.(false, 'ERROR · nube no disponible');
-    cloudSetLine('Error guardando en nube: ' + (err.message || err), 'bad');
+    const n=await nivelSesion();
+    if(faltaCodigo(n)) avisar('codigo', AVISOS.codigo());
+    else avisar('nubeGuardar', AVISOS.nubeGuardar());
     updateCloudAudit('error'); normalizeSupabaseAuditLabels();
   }
 }
-async function cloudLoadWorkbook(){
-  if(!cloudRequireReady()) return;
+async function cloudLoadWorkbook(opciones={}){
+  if(!(await cloudRequireReady())) return;
   try{
     const { data: signed, error: signErr } = await portfolioSupabase.storage
       .from(PORTFOLIO_SUPABASE_CONFIG.bucket)
@@ -10529,28 +11289,24 @@ async function cloudLoadWorkbook(){
     if(signErr) throw signErr;
     const bustUrl = signed.signedUrl + (signed.signedUrl.includes('?') ? '&' : '?') + 't=' + Date.now();
     const resp = await fetch(bustUrl, {cache:'no-store'});
-    if(!resp.ok) throw new Error('Descarga nube HTTP ' + resp.status);
+    if(!resp.ok){ const e=new Error('Descarga nube HTTP ' + resp.status); e.status=resp.status; throw e; }
     const buffer = await resp.arrayBuffer();
     const candidate = XLSX.read(buffer, {type:'array', cellDates:false, cellFormula:true, cellStyles:false});
     const accepted = applyWorkbookAfterRead?.(PORTFOLIO_SUPABASE_CONFIG.fileName, true, candidate, {buffer, tipo:'Cargado desde nube', fecha:new Date().toISOString()});
-    if(!accepted){
-      cloudSetLine('Excel de nube rechazado por el contrato de datos.', 'bad');
-      updateCloudAudit('error');
-      return;
-    }
-    const guardada = saveWorkbookCache?.(buffer, PORTFOLIO_SUPABASE_CONFIG.fileName);
+    if(!accepted){ updateCloudAudit('error'); return; }   // el rechazo ya tiene su aviso
+    saveWorkbookCache?.(buffer, PORTFOLIO_SUPABASE_CONFIG.fileName);   // si no se guarda, su aviso queda puesto (#67)
     const nowIso = new Date().toISOString();
     localStorage.setItem('portfolioOscar:lastCloudSync:v1', nowIso);
     localStorage.setItem('portfolioOscar:lastCloudDownload:v1', nowIso);
+    resuelveAviso('nubeCargar'); resuelveAviso('nubeVacia');
     updateDataStatus?.();
-    // v175.92 · ficha #67 · el éxito no tapa el aviso de copia no guardada
-    setStatus?.(true, guardada ? 'Excel cargado desde nube' : `Excel cargado desde nube, pero no se ha podido guardar en este navegador (${motivoGuardadoFallido}) · si recargas no lo verás: vuelve a cargarlo`);
-    cloudSetLine('Excel recuperado desde Supabase Storage.', 'ok');
     updateCloudAudit('ok');
   }catch(err){
     console.error(err);
-    setStatus?.(false, 'ERROR · no se pudo cargar nube');
-    cloudSetLine('Error cargando desde nube: ' + (err.message || err), 'bad');
+    const n=await nivelSesion();
+    if(faltaCodigo(n)) avisar('codigo', AVISOS.codigo());
+    else if(esNoEncontrado(err)) avisar('nubeVacia', AVISOS.nubeVacia());
+    else avisar('nubeCargar', AVISOS.nubeCargar());
     updateCloudAudit('error'); normalizeSupabaseAuditLabels();
   }
 }
@@ -10600,15 +11356,74 @@ function updateCloudAudit(forcedState){
   em.textContent=last ? 'Última sync · ' + new Date(last).toLocaleString('es-ES') : 'Sesión iniciada';
 }
 
+/* ===== TODO DELEGADO: un escuchador de cada clase en `document`, ninguno en los botones ===== */
+function hazAccion(accion, origen){
+  switch(accion){
+    case 'menu': { const pop=document.getElementById('menuPop'); if(pop && pop.hidden) abreMenu(); else cierraMenu(true); return; }
+    case 'importar': cierraMenu(false); cierraDialogo('hecho'); document.getElementById('excelFile')?.click(); return;
+    case 'sesion': cierraMenu(false); if(portfolioCloudSession?.user) pideSalida('local'); else abreDialogo('entrar'); return;
+    case 'entrar': abreDialogo('entrar'); return;
+    case 'salir-todos': cierraMenu(false); pideSalida('global'); return;
+    case 'salir-igualmente': { const a=salidaPendiente || 'local'; salidaPendiente=null; cierraDialogo('hecho'); cloudLogout(a); return; }
+    case 'seguridad': cierraMenu(false); abreSeguridad(); return;
+    case 'alta1': cierraDialogo('hecho'); empiezaAlta('alta1'); return;
+    case 'alta2': cierraDialogo('hecho'); empiezaAlta('alta2'); return;
+    case 'cerrar': cierraDialogo('cruz'); return;
+    case 'ir-reserva': abreDialogo('reserva', {alCerrar:()=>avisar('codigo', AVISOS.codigo(), false)}); return;
+    case 'ir-codigo': abreCodigo(); return;
+    case 'copiar-clave': {
+      const secreto=altaEnCurso?.secreto;
+      if(secreto && navigator.clipboard) navigator.clipboard.writeText(normalizaClave(secreto)).then(()=>{ if(origen) origen.textContent='Copiada'; }).catch(()=>{});
+      return;
+    }
+    case 'ver-aviso': abreAviso(origen?.dataset?.clave); return;
+    case 'aviso-accion': {
+      const a=avisosActivos.get(avisoAbierto);
+      cierraDialogo('hecho');
+      const hace=a?.accion?.hace;
+      if(hace==='codigo') abreCodigo();
+      else if(hace==='importar') document.getElementById('excelFile')?.click();
+      else if(hace==='cargar') cloudLoadWorkbook();
+      else if(hace==='guardar') cloudSaveWorkbook();
+      else if(hace==='backup') exportWorkbookBackup();
+      else if(hace==='seguridad') abreSeguridad();
+      else if(hace==='recargar') location.reload();
+      return;
+    }
+  }
+}
+document.addEventListener('click', e=>{
+  const t=e.target.closest('[data-accion]');
+  if(t && !t.disabled){ hazAccion(t.dataset.accion, t); return; }
+  const id=e.target.closest('button')?.id;
+  if(id==='cloudSaveBtn' || id==='cloudLoadBtn' || id==='backupBtn'){
+    cierraMenu(false);
+    if(id==='cloudSaveBtn') cloudSaveWorkbook();
+    else if(id==='cloudLoadBtn') cloudLoadWorkbook();
+    else exportWorkbookBackup();
+    return;
+  }
+  // fuera del menú, el menú se cierra
+  const pop=document.getElementById('menuPop');
+  if(pop && !pop.hidden && !e.target.closest('#menuPop')) cierraMenu(false);
+});
+document.addEventListener('submit', e=>{
+  const f=e.target;
+  if(!f || !f.closest || !f.closest('#dlg')) return;
+  e.preventDefault();
+  if(f.id==='formEntrar') cloudLogin();
+  else if(f.id==='formCodigo') enviaCodigo();
+  else if(f.id==='formReserva') enviaReserva();
+  else if(f.id==='formAlta1') enviaAlta1();
+  else if(f.id==='formAlta2') enviaAlta2();
+});
+document.addEventListener('keydown', e=>{
+  if(e.key!=='Escape') return;
+  if(!document.getElementById('dlgDim')?.hidden){ cierraDialogo('cruz'); return; }
+  const pop=document.getElementById('menuPop');
+  if(pop && !pop.hidden) cierraMenu(true);
+});
 document.addEventListener('DOMContentLoaded',()=>{
-  document.getElementById('cloudLoginBtn')?.addEventListener('click',()=>{
-    if(portfolioCloudSession?.user) cloudLogout(); else cloudShow();
-  });
-  document.getElementById('cloudDoLogin')?.addEventListener('click',cloudLogin);
-  document.getElementById('cloudClose')?.addEventListener('click',cloudHide);
-  document.getElementById('cloudSaveBtn')?.addEventListener('click',cloudSaveWorkbook);
-  document.getElementById('cloudLoadBtn')?.addEventListener('click',cloudLoadWorkbook);
-  document.getElementById('cloudOverlay')?.addEventListener('click',e=>{ if(e.target.id==='cloudOverlay') cloudHide(); });
   cloudInit();
 });
 </script>
@@ -11076,8 +11891,8 @@ function renderTwoLineBenchmarkChart(seriesA, seriesB, labelA, labelB, cfg){
      ninguna lógica de importación/nube se duplica ni se toca. */
   function refreshSheetState(){
     var status=document.getElementById('mobileSheetStatus');
-    var real=document.getElementById('importStatus');
-    if(status && real) status.textContent=real.textContent.trim();
+    // v175.93 · #87 · la línea sale del estado, no de copiar el texto de otro sitio.
+    if(status && typeof textoDatosMovil==='function') status.textContent=textoDatosMovil();
     [['mobileSheetSave','cloudSaveBtn'],['mobileSheetLoad','cloudLoadBtn']].forEach(function(pair){
       var proxy=document.getElementById(pair[0]);
       var target=document.getElementById(pair[1]);
@@ -11085,8 +11900,12 @@ function renderTwoLineBenchmarkChart(seriesA, seriesB, labelA, labelB, cfg){
     });
     var session=document.getElementById('mobileSheetSession');
     var login=document.getElementById('cloudLoginBtn');
-    if(session && login) session.textContent=login.textContent.trim() || 'Cloud';
+    if(session && login) session.textContent=login.textContent.trim() || 'Entrar';
+    var todos=document.getElementById('mobileSheetLogoutAll');
+    var todosReal=document.getElementById('cloudLogoutAllBtn');
+    if(todos && todosReal) todos.hidden=!!todosReal.hidden;
   }
+  window.refrescaHojaMovil=refreshSheetState;
   function proxyClick(id){
     var target=document.getElementById(id);
     if(target && !target.disabled){ closeSheet(); target.click(); }
@@ -11151,8 +11970,9 @@ function renderTwoLineBenchmarkChart(seriesA, seriesB, labelA, labelB, cfg){
           '<button type="button" class="primary" id="mobileSheetImport">Importar Excel</button>'+
           '<button type="button" id="mobileSheetSave">Guardar nube</button>'+
           '<button type="button" id="mobileSheetLoad">Cargar nube</button>'+
-          '<button type="button" id="mobileSheetSession">Cloud</button>'+
+          '<button type="button" id="mobileSheetSession">Entrar</button>'+
         '</div>'+
+        '<button type="button" class="mobileSheetAllBtn" id="mobileSheetLogoutAll" hidden>Salir en todos los aparatos</button>'+
         '<button type="button" class="mobileSheetCloseBtn" id="mobileSheetClose">Cerrar</button>'+
       '</div>';
     document.body.appendChild(wrap);
@@ -11172,6 +11992,7 @@ function renderTwoLineBenchmarkChart(seriesA, seriesB, labelA, labelB, cfg){
     document.getElementById('mobileSheetSave').addEventListener('click', function(){ proxyClick('cloudSaveBtn'); });
     document.getElementById('mobileSheetLoad').addEventListener('click', function(){ proxyClick('cloudLoadBtn'); });
     document.getElementById('mobileSheetSession').addEventListener('click', function(){ proxyClick('cloudLoginBtn'); });
+    document.getElementById('mobileSheetLogoutAll').addEventListener('click', function(){ proxyClick('cloudLogoutAllBtn'); });
     document.addEventListener('keydown', function(e){
       if(e.key!=='Escape') return;
       var assetWrap=document.getElementById('mobileAssetSheetWrap');
