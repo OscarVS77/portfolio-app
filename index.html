@@ -10440,6 +10440,12 @@ html.vhMovilAbierto, html.vhMovilAbierto body{overflow:hidden!important;}
   #dashboard .vhCard .vhAbrir{display:block; position:absolute; right:6px; top:50%; width:9px; height:9px; margin-top:-5px;
     border-right:2px solid var(--muted); border-top:2px solid var(--muted); transform:rotate(45deg);}
 }
+/* ficha #95 · la segunda línea de la comprobación, desde cuándo vuelve a consultar la fuente:
+   gris y más pequeña, como en la maqueta aprobada del 20/10/2026. Sólo existe si la Edge da la hora. */
+.vhTextos{display:flex; flex-direction:column; gap:4px; min-width:0;}
+.vhVuelve{font-size:11.5px; color:var(--muted);}
+.vhMovilActivo .vhTextos{gap:2px;}
+.vhMovilActivo .vhVuelve{font-size:12px;}
 </style>
 
 
@@ -13467,6 +13473,14 @@ function renderTwoLineBenchmarkChart(seriesA, seriesB, labelA, labelB, cfg){
   let peticion=0;
   let modelo=null;
   let avisosClave='[]';
+  // ficha #95 · D5: volver a pedir a la hora que devuelve la Edge (`consulta.proxima`, por activo),
+  // sólo con la página a la vista. Manda la Edge: si la web llama antes de tiempo, contesta con lo
+  // guardado sin gastar cupo. Aquí sólo se evita llamar de más.
+  const MIN_ENTRE_PETICIONES_MS=5*60*1000;   // nunca más de una cada 5 min, diga lo que diga la hora
+  const TRAS_FALLO_MS=15*60*1000;            // un refresco que falla no borra nada: se reintenta a los 15 min
+  let proximaEdge=null;      // ms · la hora más temprana de la última respuesta; null: no hay (la Edge vh1)
+  let ultimaPeticionMs=0;
+  let temporizadorRepite=null;
 
   // ── fechas y cifras ─────────────────────────────────────────────────────
   const dm=d=>d ? `${d.slice(8,10)}/${d.slice(5,7)}` : '';
@@ -13475,6 +13489,43 @@ function renderTwoLineBenchmarkChart(seriesA, seriesB, labelA, labelB, cfg){
   function hhmm(d){ try{ return d.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}); }catch(_){ return ''; } }
   function dia(v){ if(v==null || String(v).trim()==='') return null; return benchmarkDayFromDate(isoDateFromAny(v)) || null; }
   function listaDias(ds){ const t=ds.map(dm); return t.length<2 ? t[0] : t.slice(0,-1).join(', del ')+' ni del '+t[t.length-1]; }
+  // ── ficha #95 · cuándo miró la fuente y cuándo vuelve a mirar (textos del 21/10/2026, con la maqueta
+  // aprobada por Óscar). La hora es SIEMPRE la de Madrid, en 24 h, esté el navegador en la zona que esté.
+  const FMT_MADRID=(()=>{ try{ return new Intl.DateTimeFormat('es-ES',{timeZone:'Europe/Madrid', year:'numeric',
+    month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit', hourCycle:'h23'}); }catch(_){ return null; } })();
+  function madrid(ms){
+    if(!FMT_MADRID || !Number.isFinite(ms)) return null;
+    const p={};
+    for(const x of FMT_MADRID.formatToParts(new Date(ms))) p[x.type]=x.value;
+    return {dia:`${p.year}-${p.month}-${p.day}`, hora:`${p.hour}:${p.minute}`};
+  }
+  // «a las 06:05», o «el 19/10 a las 06:05» si no fue hoy en Madrid.
+  function cuandoMadrid(ms){
+    const m=madrid(ms), h=madrid(Date.now());
+    if(!m || !h) return null;
+    return m.dia===h.dia ? `a las ${m.hora}` : `el ${dm(m.dia)} a las ${m.hora}`;
+  }
+  // La última consulta de un activo, si la Edge la da y explica lo que falta: no lo tenía, o no se pudo
+  // consultar. Sin ella —la Edge vh1, que no da horas, un activo nunca consultado, o una consulta que trajo
+  // lo que esperaba—, null: quedan los textos de la v175.94, sin inventar horas.
+  function consultaDe(ed){
+    const c=ed && ed.consulta;
+    if(!c || (c.resultado!=='no_tenia' && c.resultado!=='fallo')) return null;
+    const cuando=cuandoMadrid(Date.parse(c.ultima||''));
+    if(!cuando) return null;
+    return {fallo:c.resultado==='fallo', cuando, proxima:c.proxima||null};
+  }
+  // La segunda línea: desde cuándo vuelve a consultar. Sólo si la Edge da la hora.
+  function vuelveTxt(c){
+    const m=madrid(Date.parse((c && c.proxima) || '')), h=madrid(Date.now());
+    if(!m || !h) return null;
+    return m.dia===h.dia ? `Se vuelve a consultar a partir de las ${m.hora}.` : `Se vuelve a consultar a partir del ${dm(m.dia)} a las ${m.hora}.`;
+  }
+  // «Sin comprobar: …» con la hora de la consulta; `falta`, lo que no tenía la fuente.
+  function sinComprobarConsulta(c, falta){
+    const v=vuelveTxt(c);
+    return {tipo:'neutro', txt:c.fallo ? `Sin comprobar: ${c.cuando} no se pudo consultar la fuente.` : `Sin comprobar: ${c.cuando} la fuente aún no tenía ${falta}.`, ...(v ? {vuelve:v} : {})};
+  }
   // Una cifra decimal, como entero y escala: «14.6143» → {n:146143n, e:4}.
   function decimal(x){
     let s=typeof x==='number' ? String(x) : String(x ?? '').trim();
@@ -13530,8 +13581,13 @@ function renderTwoLineBenchmarkChart(seriesA, seriesB, labelA, labelB, cfg){
     return !!(d && d.ok===true && d.functionVersion===VERSION_EDGE && d.valoracion===a4
       && d.activos && typeof d.activos==='object');
   }
-  async function pideEdge(libro){
+  async function pideEdge(libro, refresco=false){
     const mio=++peticion;
+    // Un REFRESCO (D5) no cambia nada de lo que se ve mientras pregunta: ni «Buscando…», ni «Entra para
+    // pedirlo» si la sesión se ha ido, ni «No se ha podido traer» si falla. Sólo, si la Edge contesta
+    // bien, sus precios.
+    if(refresco && (!portfolioSupabase || !portfolioCloudSession?.user)){ proximaEdge=null; return; }
+    if(!refresco){ proximaEdge=null; clearTimeout(temporizadorRepite); temporizadorRepite=null; }
     if(!portfolioSupabase){
       if(isSupabaseConfigured()){
         edge={fase:'esperandoSesion'};
@@ -13542,12 +13598,16 @@ function renderTwoLineBenchmarkChart(seriesA, seriesB, labelA, labelB, cfg){
       return;
     }
     if(!portfolioCloudSession?.user){ edge={fase:'sinSesion'}; return; }
-    edge={fase:'pidiendo'};
+    if(!refresco) edge={fase:'pidiendo'};
     let n={actual:null};
     try{ n=await nivelSesion(); }catch(_){}
     if(peticion!==mio) return;
-    if(n.actual!=='aal2'){ edge={fase:'sinSesion'}; repinta(); return; }
+    if(n.actual!=='aal2'){
+      if(refresco){ proximaEdge=null; return; }
+      edge={fase:'sinSesion'}; repinta(); return;
+    }
     let r;
+    ultimaPeticionMs=Date.now();
     try{
       r=await Promise.race([
         portfolioSupabase.functions.invoke(EDGE, {body:{valoracion:libro.a4}}),
@@ -13555,9 +13615,44 @@ function renderTwoLineBenchmarkChart(seriesA, seriesB, labelA, labelB, cfg){
       ]);
     }catch(e){ r={error:e}; }
     if(peticion!==mio) return;
-    edge=(!r?.error && respuestaValida(r?.data, libro.a4)) ? {fase:'listo', respuesta:r.data} : {fase:'fallo'};
+    const valida=!r?.error && respuestaValida(r?.data, libro.a4);
+    if(refresco && !valida){ proximaEdge=Date.now()+TRAS_FALLO_MS; programaRepeticion(); return; }
+    edge=valida ? {fase:'listo', respuesta:r.data} : {fase:'fallo'};
+    proximaEdge=valida ? proximaDe(r.data) : null;
     repinta();
+    programaRepeticion();
   }
+  // La hora más temprana a la que la Edge volvería a consultar algo (D7). Sin `consulta` —la Edge vh1— no
+  // hay hora y no se repite nada: la web se porta como la v175.94 (D6).
+  function proximaDe(resp){
+    let min=null;
+    for(const a of Object.values((resp && resp.activos) || {})){
+      const p=Date.parse((a && a.consulta && a.consulta.proxima) || '');
+      if(Number.isFinite(p) && (min===null || p<min)) min=p;
+    }
+    return min;
+  }
+  function cuandoRepetir(){ return proximaEdge===null ? null : Math.max(proximaEdge, ultimaPeticionMs+MIN_ENTRE_PETICIONES_MS); }
+  function programaRepeticion(){
+    clearTimeout(temporizadorRepite); temporizadorRepite=null;
+    const t=cuandoRepetir();
+    if(t===null || document.hidden) return;   // oculta, ninguna: al volver a la vista se mira
+    temporizadorRepite=setTimeout(repite, Math.max(0, t-Date.now()));
+  }
+  function repite(){
+    temporizadorRepite=null;
+    if(document.hidden || edge.fase!=='listo') return;
+    const t=cuandoRepetir();
+    if(t===null) return;
+    if(Date.now()<t){ programaRepeticion(); return; }
+    const libro=leeLibro();
+    if(libro && JSON.stringify(libro)===libroClave) pideEdge(libro, true);
+  }
+  // Safari del iPhone duerme los temporizadores: al volver a la vista, si la hora ya pasó, se pide ahí.
+  document.addEventListener('visibilitychange', ()=>{
+    if(document.hidden){ clearTimeout(temporizadorRepite); temporizadorRepite=null; }
+    else repite();
+  });
 
   // ── la comprobación ─────────────────────────────────────────────────────
   function sinComprobarQ(a, a4){
@@ -13567,19 +13662,27 @@ function renderTwoLineBenchmarkChart(seriesA, seriesB, labelA, labelB, cfg){
   }
   // QUE NO AFIRME LO QUE NO SE SABE (revisión de Óscar del 18/10/2026): «no hay» sólo cuando la Edge
   // ha contestado y no lo trae; si ha fallado o ha tardado más de 30 s, «no se ha podido traer».
-  function sinDatos(){
+  function sinDatos(ed){
     if(edge.fase==='sinSesion') return {tipo:'neutro', txt:'Sin comprobar: entra para pedir los precios de esos días.'};
     if(edge.fase==='fallo') return {tipo:'neutro', txt:'Sin comprobar: no se han podido traer los precios de esos días.'};
+    const c=consultaDe(ed);
+    if(c) return sinComprobarConsulta(c, 'precios de esos días');
     return {tipo:'neutro', txt:'Sin comprobar: no hay precios de esos días.'};
   }
   // Por qué un activo con unidades no tiene precio: la Edge contestó sin él, no se ha podido traer,
   // o no se ha pedido (sin sesión con el código).
   function motivoSinPrecio(){ return edge.fase==='sinSesion' ? 'sinSesion' : edge.fase==='fallo' ? 'noTraido' : 'sinPrecio'; }
   const TEXTO_SIN_PRECIO={sinPrecio:'Sin precio de hoy', noTraido:'No se ha podido traer', sinSesion:'Entra para pedirlo'};
+  // La columna del precio: con la hora de la consulta, si la Edge la da (ficha #95).
+  function textoSinPrecio(f){
+    const c=f.motivo==='sinPrecio' ? f.consulta : null;
+    if(c) return c.fallo ? `No se pudo consultar la fuente ${c.cuando}` : `La fuente aún no lo tenía ${c.cuando}`;
+    return TEXTO_SIN_PRECIO[f.motivo] || 'Sin precio de hoy';
+  }
   function compruebaVl(a, ed, a4){
     const q=sinComprobarQ(a, a4); if(q) return q;
     const ventana=ed && Array.isArray(ed.ventana) ? ed.ventana : null;
-    if(!ventana || ventana.length!==3) return sinDatos();
+    if(!ventana || ventana.length!==3) return sinDatos(ed);
     const libro=centimosLibro(a.valor);
     let cuadra=null; const faltan=[];
     for(const d of ventana){
@@ -13588,19 +13691,34 @@ function renderTwoLineBenchmarkChart(seriesA, seriesB, labelA, labelB, cfg){
     }
     if(cuadra) return {tipo:'ok', fecha:cuadra, txt:`Cuadra al céntimo con el valor del ${dm(cuadra)}`};
     // el hueco es de la fuente, no de tu libro (revisión de Óscar de la página de verificación, §12)
-    if(faltan.length) return {tipo:'neutro', txt:`Sin comprobar: la fuente no tiene el valor liquidativo del ${listaDias(faltan)}.`};
+    if(faltan.length){
+      const c=consultaDe(ed);
+      if(c) return sinComprobarConsulta(c, `el valor liquidativo del ${listaDias(faltan)}`);
+      return {tipo:'neutro', txt:`Sin comprobar: la fuente no tiene el valor liquidativo del ${listaDias(faltan)}.`};
+    }
     return {tipo:'aviso', txt:'No cuadra con ninguno de los tres días anteriores. Revisa las participaciones.'};
   }
-  function compruebaRango(a, rango, a4, clave){
+  // `ed`: lo que la Edge da del activo, con su consulta (ficha #95): el oro y, desde el 21/10/2026, Bitcoin.
+  function compruebaRango(a, rango, a4, clave, ed){
     const q=sinComprobarQ(a, a4); if(q) return q;
-    if(!rango) return sinDatos();
-    if(rango.minimo==null || rango.maximo==null) return {tipo:'neutro', txt:`Sin comprobar: la fuente no tiene el precio del ${dm(rango.fecha||a4)}.`};
+    if(!rango) return sinDatos(ed);
+    if(rango.minimo==null || rango.maximo==null){
+      const c=consultaDe(ed);
+      if(c) return sinComprobarConsulta(c, `el precio del ${dm(rango.fecha||a4)}`);
+      return {tipo:'neutro', txt:`Sin comprobar: la fuente no tiene el precio del ${dm(rango.fecha||a4)}.`};
+    }
     const p=Number(a.valor)/Number(a.unidades);
     const lo=Number(rango.minimo)*(1-MARGEN[clave]), hi=Number(rango.maximo)*(1+MARGEN[clave]);
     const ese=rango.fecha===a4;
     if(p>=lo && p<=hi){
       return {tipo:'ok', fecha:rango.fecha, txt:ese ? 'Encaja con el precio de ese día' : `Encaja con el precio del ${dm(rango.fecha)}`,
         txtMovil:`Encaja con el precio del ${dm(rango.fecha)}`};
+    }
+    // Bitcoin el día de la valoración: con la vela de ese día SIN CERRAR, su rango aún puede crecer. Si encaja,
+    // encaja (arriba); si no, todavía no se sabe: «Sin comprobar», con la hora de la consulta, y sin aviso.
+    if(rango.completo===false){
+      const c=consultaDe(ed);
+      if(c) return sinComprobarConsulta(c, `el precio del ${dm(rango.fecha||a4)}`);
     }
     return {tipo:'aviso', fecha:rango.fecha, txt:(ese ? 'No encaja con el precio de ese día' : `No encaja con el precio del ${dm(rango.fecha)}`)+'. Revisa las unidades.',
       txtMovil:`No encaja con el precio del ${dm(rango.fecha)}. Revisa las unidades.`};
@@ -13638,13 +13756,13 @@ function renderTwoLineBenchmarkChart(seriesA, seriesB, labelA, labelB, cfg){
         f.usaLibro=true; f.motivo='sinUnidades';
         f.check={tipo:'neutro', txt:'Sin unidades en tu libro'};
       }else if(a.clave==='btc'){
-        f.check=resp ? compruebaRango(a, ed && ed.dia, libro.a4, 'btc') : sinDatos();
+        f.check=resp ? compruebaRango(a, ed && ed.dia, libro.a4, 'btc', ed) : sinDatos();
         if(btc.precio){
           f.precio={txt:`Precio a las ${hhmm(btc.precio.hora)}: ${fmtMoney(btc.precio.valor)}`, fecha:hoyLocal(), hora:hhmm(btc.precio.hora)};
           f.valorC=centimos(a.unidades, btc.precio.texto);
         }else{ f.usaLibro=true; f.motivo='noTraido'; }   // Coinbase no ha contestado: no se ha podido traer
       }else if(a.clave==='gold'){
-        f.check=resp ? compruebaRango(a, ed && ed.sesion, libro.a4, 'gold') : sinDatos();
+        f.check=resp ? compruebaRango(a, ed && ed.sesion, libro.a4, 'gold', ed) : sinDatos();
         const u=ed && ed.ultimo;
         if(u && u.valor){
           f.precio={txt:`Cierre en Xetra a ${dmy(u.fecha)}: ${fmtMoney(Number(u.valor), decimalesDe(u.valor,2,3))}`, fecha:u.fecha};
@@ -13661,6 +13779,8 @@ function renderTwoLineBenchmarkChart(seriesA, seriesB, labelA, labelB, cfg){
           else{ f.usaLibro=true; f.motivo='sinPosterior'; f.precio.anterior=true; }
         }else{ f.usaLibro=true; f.motivo=motivoSinPrecio(); }
       }
+      // ficha #95 · la consulta que explica por qué va con el valor del libro (sólo si la hay)
+      if(a.clave!=='btc' && (f.motivo==='sinPrecio' || f.motivo==='sinPosterior')){ const c=consultaDe(ed); if(c) f.consulta=c; }
       // Si la comprobación dice que las unidades no son de fiar, la cifra no puede usarlas: el activo
       // va con su valor del libro hasta que se revisen (revisión de Óscar de la página de verificación, §12).
       if(f.check && f.check.tipo==='aviso'){ f.aviso=textoAviso(f, libro.a4); f.usaLibro=true; }
@@ -13694,9 +13814,26 @@ function renderTwoLineBenchmarkChart(seriesA, seriesB, labelA, labelB, cfg){
     }
     // un activo con aviso ya dice arriba por qué va con el valor del libro
     const grupo=(mot, uno, varios)=>{ const fs=filas.filter(f=>f.motivo===mot && !f.aviso); if(fs.length) m.notas.push({tipo:'neutro', txt:`${enumera(fs)} ${fs.length===1?'va':'van'} con el valor de tu libro: ${fs.length===1?uno:(varios||uno)}`}); };
-    grupo('sinPrecio','hoy no hay precio.');
+    // ficha #95 · con la hora de la consulta, si la Edge la da: un grupo por frase, porque dos activos
+    // pueden haberse consultado a horas distintas; los que no la tienen, con el texto de antes.
+    const grupoConsulta=(mot, uno, varios, frase, frases)=>{
+      const fs=filas.filter(f=>f.motivo===mot && !f.aviso);
+      const sin=fs.filter(f=>!f.consulta), porFrase=new Map();
+      for(const f of fs.filter(f=>f.consulta)){
+        const k=`${f.consulta.fallo ? 'f' : 'n'}|${f.consulta.cuando}`;
+        if(!porFrase.has(k)) porFrase.set(k, []);
+        porFrase.get(k).push(f);
+      }
+      if(sin.length) m.notas.push({tipo:'neutro', txt:`${enumera(sin)} ${sin.length===1?'va':'van'} con el valor de tu libro: ${sin.length===1?uno:(varios||uno)}`});
+      for(const g of porFrase.values()){
+        const c=g[0].consulta;
+        const cola=c.fallo ? `${c.cuando} no se pudo consultar la fuente.` : `${c.cuando} la fuente aún no tenía ${g.length===1?frase:(frases||frase)}.`;
+        m.notas.push({tipo:'neutro', txt:`${enumera(g)} ${g.length===1?'va':'van'} con el valor de tu libro: ${cola}`});
+      }
+    };
+    grupoConsulta('sinPrecio','hoy no hay precio.', null, 'su precio', 'sus precios');
     grupo('noTraido','no se ha podido traer su precio de hoy.','no se han podido traer sus precios de hoy.');
-    grupo('sinPosterior','todavía no hay un precio posterior.');
+    grupoConsulta('sinPosterior','todavía no hay un precio posterior.', null, 'un precio posterior');
     grupo('sinSesion','entra para ver su precio de hoy.','entra para ver sus precios de hoy.');
     grupo('sinUnidades','sin unidades en tu libro.');
     return m;
@@ -13723,7 +13860,12 @@ function renderTwoLineBenchmarkChart(seriesA, seriesB, labelA, labelB, cfg){
   }
   function celdaCheck(f, movil){
     if(!f.check) return {tipo:'neutro', txt:'Buscando…', buscando:true};
-    return {tipo:f.check.tipo, txt:(movil && f.check.txtMovil) || f.check.txt};
+    return {tipo:f.check.tipo, txt:(movil && f.check.txtMovil) || f.check.txt, vuelve:f.check.vuelve || null};
+  }
+  // El texto de la comprobación y, si la Edge da la hora, su segunda línea (ficha #95, maqueta del 20/10).
+  function textosCheck(ck){
+    if(!ck.vuelve) return `<span>${escHtml(ck.txt)}</span>`;
+    return `<span class="vhTextos"><span>${escHtml(ck.txt)}</span><span class="vhVuelve">${escHtml(ck.vuelve)}</span></span>`;
   }
   function htmlTabla(m){
     const cab=`<div class="vhFila vhCab" role="row"><span role="columnheader">Activo</span><span role="columnheader" class="vhNum">Unidades</span><span role="columnheader">Último precio</span><span role="columnheader" class="vhNum">Valor de hoy</span><span role="columnheader">Con tu libro del ${dm(m.a4)}</span></div>`;
@@ -13731,7 +13873,7 @@ function renderTwoLineBenchmarkChart(seriesA, seriesB, labelA, labelB, cfg){
       const ck=celdaCheck(f, false);
       const precio=m.buscando ? '<span class="vhApagado">Buscando…</span>'
         : f.precio ? `<span class="${f.precio.anterior?'vhApagado':''}">${escHtml(f.precio.txt)}</span>`
-        : `<span class="vhApagado">${f.unidades ? (TEXTO_SIN_PRECIO[f.motivo] || 'Sin precio de hoy') : '—'}</span>`;
+        : `<span class="vhApagado">${f.unidades ? escHtml(textoSinPrecio(f)) : '—'}</span>`;
       const nota=f.motivo==='sinUnidades' ? 'sin unidades en tu libro' : f.usaLibro ? 'el de tu libro' : '';
       const valor=m.buscando ? '<span class="vhApagado">—</span>'
         : `<span>${escHtml(euros(f.valorC))}</span>${nota ? `<span class="vhSub">${nota}</span>` : ''}`;
@@ -13739,7 +13881,7 @@ function renderTwoLineBenchmarkChart(seriesA, seriesB, labelA, labelB, cfg){
         +`<span role="cell" class="vhNum">${f.unidades ? escHtml(unidadesTxt(f.unidades)) : '—'}</span>`
         +`<span role="cell">${precio}</span>`
         +`<span role="cell" class="vhNum vhValor">${valor}</span>`
-        +`<span role="cell" class="vhCheck ${ck.buscando?'buscando':ck.tipo}"><span class="vhPunto ${ck.buscando?'neutro':ck.tipo}" aria-hidden="true"></span><span>${escHtml(ck.txt)}</span></span></div>`;
+        +`<span role="cell" class="vhCheck ${ck.buscando?'buscando':ck.tipo}"><span class="vhPunto ${ck.buscando?'neutro':ck.tipo}" aria-hidden="true"></span>${textosCheck(ck)}</span></div>`;
     }).join('');
     const total=`<div class="vhFila vhTotal" role="row"><span role="cell">Total</span><span role="cell"></span><span role="cell"></span><span role="cell" class="vhNum">${m.buscando ? '—' : escHtml(euros(m.totalC))}</span><span role="cell" class="vhApagado">Tu libro: ${escHtml(m.libroTxt)}</span></div>`;
     return `<div class="vhTablaWrap"><div class="vhTabla" role="table" aria-label="Valor de hoy, activo por activo">${cab}${filas}${total}</div></div><p class="vhPie">${escHtml(PIE)}</p>`;
@@ -13748,10 +13890,10 @@ function renderTwoLineBenchmarkChart(seriesA, seriesB, labelA, labelB, cfg){
     const lista=m.filas.map(f=>{
       const ck=celdaCheck(f, true);
       const u=f.unidades ? `${unidadesTxt(f.unidades)} ${f.clave==='btc' ? 'BTC' : f.clave==='gold' ? 'unidades' : 'participaciones'}` : 'Sin unidades en tu libro';
-      const precio=m.buscando ? 'Buscando…' : f.precio ? f.precio.txt : (f.unidades ? (TEXTO_SIN_PRECIO[f.motivo] || 'Sin precio de hoy') : '');
+      const precio=m.buscando ? 'Buscando…' : f.precio ? f.precio.txt : (f.unidades ? textoSinPrecio(f) : '');
       return `<li class="vhMovilActivo" data-vh-activo="${f.clave}"><div class="vhMovilCabeza"><span class="vhNombre">${escHtml(nombreCorto(f))}</span><span class="vhNum">${m.buscando ? '—' : escHtml(euros(f.valorC))}</span></div>`
         +`<div class="vhLinea">${escHtml(u)}</div>`+(precio ? `<div class="vhLinea">${escHtml(precio)}${!m.buscando && f.usaLibro && f.unidades ? ' · va con el de tu libro' : ''}</div>` : '')
-        +`<div class="vhCheck ${ck.buscando?'buscando':ck.tipo}"><span class="vhPunto ${ck.buscando?'neutro':ck.tipo}" aria-hidden="true"></span><span>${escHtml(ck.txt)}</span></div></li>`;
+        +`<div class="vhCheck ${ck.buscando?'buscando':ck.tipo}"><span class="vhPunto ${ck.buscando?'neutro':ck.tipo}" aria-hidden="true"></span>${textosCheck(ck)}</div></li>`;
     }).join('');
     return `<button type="button" class="vhVolver" data-vh-volver><span aria-hidden="true">‹</span> Hoy</button>`
       +`<h2 id="vhMovilTitulo">Valor de hoy</h2>`
@@ -13819,7 +13961,11 @@ function renderTwoLineBenchmarkChart(seriesA, seriesB, labelA, labelB, cfg){
   }
   function actualiza(){
     const libro=leeLibro();
-    if(!libro || !libro.activos.some(a=>a.unidades)){ libroClave=null; peticion++; edge={fase:'nada'}; modelo=null; pinta(); return; }
+    if(!libro || !libro.activos.some(a=>a.unidades)){
+      libroClave=null; peticion++; edge={fase:'nada'}; modelo=null;
+      proximaEdge=null; clearTimeout(temporizadorRepite); temporizadorRepite=null;
+      pinta(); return;
+    }
     const clave=JSON.stringify(libro);
     if(clave!==libroClave){ libroClave=clave; edge={fase:'nada'}; pideEdge(libro); }
     modelo=calcula(libro);
@@ -13853,7 +13999,7 @@ function renderTwoLineBenchmarkChart(seriesA, seriesB, labelA, labelB, cfg){
     document.getElementById('heroMetricHoy')?.focus?.();
   };
   // Para los verificadores y la página de verificación: el estado, sin pintar nada.
-  window.valorHoyEstado=function(){ return JSON.parse(JSON.stringify({edge:edge.fase, modelo}, (k,v)=>typeof v==='bigint' ? Number(v) : v)); };
+  window.valorHoyEstado=function(){ return JSON.parse(JSON.stringify({edge:edge.fase, modelo, repite:cuandoRepetir()}, (k,v)=>typeof v==='bigint' ? Number(v) : v)); };
   window.valorHoyActualiza=function(opciones){ if(opciones && opciones.reinicia){ libroClave=null; } actualiza(); };
 
   // ── enganches ───────────────────────────────────────────────────────────
