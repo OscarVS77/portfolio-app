@@ -10400,7 +10400,7 @@ html[data-salido] #movimientos, html[data-salido] #historial, html[data-salido] 
 #dashboard #vhFoldBody[hidden]{display:none!important;}
 .vhTablaWrap{overflow-x:auto; border:1px solid var(--line); border-radius:12px;}
 .vhTabla{min-width:860px; font-size:13px; line-height:1.4; color:var(--text2);}
-.vhFila{display:grid; grid-template-columns:1.3fr .8fr 1.9fr .9fr 1.7fr; gap:16px; align-items:start; padding:12px 18px; border-bottom:1px solid var(--line2);}
+.vhFila{display:grid; grid-template-columns:1.3fr .8fr 1.9fr .9fr; gap:16px; align-items:start; padding:12px 18px; border-bottom:1px solid var(--line2);}
 .vhFila.vhCab{background:var(--bg); color:var(--muted); font-size:12px;}
 .vhFila.vhTotal{background:var(--bg); border-bottom:0; color:var(--text); font-weight:620;}
 .vhFila.vhTotal .vhApagado{font-weight:400;}
@@ -10440,12 +10440,11 @@ html.vhMovilAbierto, html.vhMovilAbierto body{overflow:hidden!important;}
   #dashboard .vhCard .vhAbrir{display:block; position:absolute; right:6px; top:50%; width:9px; height:9px; margin-top:-5px;
     border-right:2px solid var(--muted); border-top:2px solid var(--muted); transform:rotate(45deg);}
 }
-/* ficha #95 · la segunda línea de la comprobación, desde cuándo vuelve a consultar la fuente:
-   gris y más pequeña, como en la maqueta aprobada del 20/10/2026. Sólo existe si la Edge da la hora. */
-.vhTextos{display:flex; flex-direction:column; gap:4px; min-width:0;}
-.vhVuelve{font-size:11.5px; color:var(--muted);}
-.vhMovilActivo .vhTextos{gap:2px;}
-.vhMovilActivo .vhVuelve{font-size:12px;}
+/* ficha #95 · «más claro» (maqueta aprobada por Óscar el 21/10/2026): lo que ha subido o bajado cada activo
+   desde la valoración, debajo de su valor. Con .green y .red, los colores de la diferencia de la tarjeta;
+   sin ninguna de las dos (0,00 €), gris. En el iPhone, a la derecha, bajo el valor. */
+.vhDifActivo{font-size:13px; font-weight:620; color:var(--muted); font-variant-numeric:tabular-nums;}
+.vhMovilActivo .vhDifActivo{margin-top:2px; text-align:right;}
 </style>
 
 
@@ -13723,12 +13722,15 @@ function renderTwoLineBenchmarkChart(seriesA, seriesB, labelA, labelB, cfg){
     return {tipo:'aviso', fecha:rango.fecha, txt:(ese ? 'No encaja con el precio de ese día' : `No encaja con el precio del ${dm(rango.fecha)}`)+'. Revisa las unidades.',
       txtMovil:`No encaja con el precio del ${dm(rango.fecha)}. Revisa las unidades.`};
   }
+  // ficha #95 · «más claro» (maqueta aprobada por Óscar el 21/10/2026): el aviso dice qué corregir en tu Excel.
+  // Los fondos y el plan, «las participaciones»; el oro y Bitcoin, «las unidades».
+  function queRevisar(f){ return f.clave==='gold' || f.clave==='btc' ? 'las unidades' : 'las participaciones'; }
   function textoAviso(f, a4){
-    const libro=fmtMoney(f.libro);
-    if(f.clave==='btc') return `${unidadesTxt(f.unidades)} BTC no dan los ${libro} de tu libro del ${dm(a4)} con ningún precio del ${dm(f.check.fecha||a4)}. Revisa las unidades en tu Excel.`;
-    if(f.clave==='gold') return `${unidadesTxt(f.unidades)} unidades no dan los ${libro} de tu libro del ${dm(a4)} con ningún precio del ${dm(f.check.fecha||a4)}. Revisa las unidades en tu Excel.`;
-    return `${unidadesTxt(f.unidades)} participaciones no dan los ${libro} de tu libro del ${dm(a4)} con ningún valor liquidativo de los tres días anteriores. Revisa las participaciones en tu Excel.`;
+    const u=unidadesTxt(f.unidades)+(f.clave==='btc' ? ' BTC' : '');
+    const q=queRevisar(f);
+    return `${q.charAt(0).toUpperCase()+q.slice(1)} de tu Excel (${u}) no dan el valor que pusiste el ${dm(a4)} (${fmtMoney(f.libro)}). Revisa ${q}.`;
   }
+  function textoAvisoMovil(f, a4){ return `Revisa ${queRevisar(f)} en tu Excel: no dan el valor que pusiste el ${dm(a4)}.`; }
 
   // ── el modelo: todo lo que se pinta, calculado una vez ──────────────────
   function nombreCorto(f){ return f.clave==='btc' ? 'Bitcoin' : f.clave==='gold' ? 'Oro' : f.nombre; }
@@ -13783,8 +13785,10 @@ function renderTwoLineBenchmarkChart(seriesA, seriesB, labelA, labelB, cfg){
       if(a.clave!=='btc' && (f.motivo==='sinPrecio' || f.motivo==='sinPosterior')){ const c=consultaDe(ed); if(c) f.consulta=c; }
       // Si la comprobación dice que las unidades no son de fiar, la cifra no puede usarlas: el activo
       // va con su valor del libro hasta que se revisen (revisión de Óscar de la página de verificación, §12).
-      if(f.check && f.check.tipo==='aviso'){ f.aviso=textoAviso(f, libro.a4); f.usaLibro=true; }
+      if(f.check && f.check.tipo==='aviso'){ f.aviso=textoAviso(f, libro.a4); f.avisoMovil=textoAvisoMovil(f, libro.a4); f.usaLibro=true; }
       if(f.usaLibro) f.valorC=centimosLibro(a.valor);
+      // ficha #95 · «más claro»: lo que ha subido o bajado desde la valoración; sin diferencia si va con el libro
+      f.difC=f.usaLibro ? null : f.valorC-centimosLibro(a.valor);
       filas.push(f);
     }
     const libroC=libro.activos.reduce((s,a)=>s+centimosLibro(a.valor), 0n);
@@ -13803,14 +13807,13 @@ function renderTwoLineBenchmarkChart(seriesA, seriesB, labelA, labelB, cfg){
     }
     const avisos=filas.filter(f=>f.aviso);
     if(avisos.length){
-      // los fondos y el plan «no cuadran» (al céntimo); el oro y Bitcoin «no encajan» (en el rango),
-      // como dice su fila
+      // ficha #95 · «más claro»: «Revisa las participaciones de Emerging Markets en tu Excel.»; los fondos y
+      // el plan, sus participaciones, y el oro y Bitcoin, sus unidades
+      const de=fs=>{ const n=fs.map(f=>f.clave==='gold' ? 'del oro' : f.clave==='pension' ? 'del plan' : `de ${nombreCorto(f)}`);
+        return n.length<2 ? n[0] : n.slice(0,-1).join(', ')+' y '+n[n.length-1]; };
       const vl=avisos.filter(f=>f.clave!=='gold' && f.clave!=='btc'), rg=avisos.filter(f=>f.clave==='gold' || f.clave==='btc');
-      const partes=[];
-      if(vl.length) partes.push(`${enumera(vl)} ${vl.length===1?'no cuadra':'no cuadran'}`);
-      if(rg.length) partes.push(`${enumera(rg, !partes.length)} ${rg.length===1?'no encaja':'no encajan'}`);
-      const revisa=[vl.length ? 'las participaciones' : '', rg.length ? 'las unidades' : ''].filter(Boolean).join(' y ');
-      m.notas.push({tipo:'aviso', txt:`${partes.join(' y ')} con tu libro: ${avisos.length===1?'va':'van'} con su valor del libro hasta que revises ${revisa}.`});
+      const partes=[vl.length ? `las participaciones ${de(vl)}` : '', rg.length ? `las unidades ${de(rg)}` : ''].filter(Boolean);
+      m.notas.push({tipo:'aviso', txt:`Revisa ${partes.join(' y ')} en tu Excel.`});
     }
     // un activo con aviso ya dice arriba por qué va con el valor del libro
     const grupo=(mot, uno, varios)=>{ const fs=filas.filter(f=>f.motivo===mot && !f.aviso); if(fs.length) m.notas.push({tipo:'neutro', txt:`${enumera(fs)} ${fs.length===1?'va':'van'} con el valor de tu libro: ${fs.length===1?uno:(varios||uno)}`}); };
@@ -13858,42 +13861,42 @@ function renderTwoLineBenchmarkChart(seriesA, seriesB, labelA, labelB, cfg){
       +(m.rango ? `<div class="vhLinea">${escHtml(m.rango)}</div>` : '')
       +htmlNotas(m);
   }
-  function celdaCheck(f, movil){
-    if(!f.check) return {tipo:'neutro', txt:'Buscando…', buscando:true};
-    return {tipo:f.check.tipo, txt:(movil && f.check.txtMovil) || f.check.txt, vuelve:f.check.vuelve || null};
-  }
-  // El texto de la comprobación y, si la Edge da la hora, su segunda línea (ficha #95, maqueta del 20/10).
-  function textosCheck(ck){
-    if(!ck.vuelve) return `<span>${escHtml(ck.txt)}</span>`;
-    return `<span class="vhTextos"><span>${escHtml(ck.txt)}</span><span class="vhVuelve">${escHtml(ck.vuelve)}</span></span>`;
+  // ficha #95 · «más claro» (maqueta aprobada por Óscar el 21/10/2026): la comprobación con el libro se sigue
+  // calculando, pero sólo se ve cuando hay que corregir algo —el aviso—. Cada activo dice cuánto ha subido o
+  // bajado desde la valoración, con los colores de la diferencia de la tarjeta; 0,00 €, en gris y sin signo;
+  // y ninguna diferencia si va con el valor del libro.
+  function htmlDif(f, etiqueta){
+    if(f.difC==null) return '';
+    const txt=f.difC===0n ? fmtMoney(0) : fmtMoney(Number(f.difC)/100,2,true);
+    return `<${etiqueta} class="vhDifActivo ${claseDif(f.difC)}">${escHtml(txt)}</${etiqueta}>`;
   }
   function htmlTabla(m){
-    const cab=`<div class="vhFila vhCab" role="row"><span role="columnheader">Activo</span><span role="columnheader" class="vhNum">Unidades</span><span role="columnheader">Último precio</span><span role="columnheader" class="vhNum">Valor de hoy</span><span role="columnheader">Con tu libro del ${dm(m.a4)}</span></div>`;
+    const cab=`<div class="vhFila vhCab" role="row"><span role="columnheader">Activo</span><span role="columnheader" class="vhNum">Unidades</span><span role="columnheader">Último precio</span><span role="columnheader" class="vhNum">Valor de hoy</span></div>`;
     const filas=m.filas.map(f=>{
-      const ck=celdaCheck(f, false);
       const precio=m.buscando ? '<span class="vhApagado">Buscando…</span>'
         : f.precio ? `<span class="${f.precio.anterior?'vhApagado':''}">${escHtml(f.precio.txt)}</span>`
         : `<span class="vhApagado">${f.unidades ? escHtml(textoSinPrecio(f)) : '—'}</span>`;
       const nota=f.motivo==='sinUnidades' ? 'sin unidades en tu libro' : f.usaLibro ? 'el de tu libro' : '';
       const valor=m.buscando ? '<span class="vhApagado">—</span>'
-        : `<span>${escHtml(euros(f.valorC))}</span>${nota ? `<span class="vhSub">${nota}</span>` : ''}`;
+        : `<span>${escHtml(euros(f.valorC))}</span>${nota ? `<span class="vhSub">${nota}</span>` : ''}${htmlDif(f, 'span')}`;
       return `<div class="vhFila" role="row" data-vh-activo="${f.clave}"><span role="cell" class="vhNombre">${escHtml(nombreTabla(f))}</span>`
         +`<span role="cell" class="vhNum">${f.unidades ? escHtml(unidadesTxt(f.unidades)) : '—'}</span>`
         +`<span role="cell">${precio}</span>`
-        +`<span role="cell" class="vhNum vhValor">${valor}</span>`
-        +`<span role="cell" class="vhCheck ${ck.buscando?'buscando':ck.tipo}"><span class="vhPunto ${ck.buscando?'neutro':ck.tipo}" aria-hidden="true"></span>${textosCheck(ck)}</span></div>`;
+        +`<span role="cell" class="vhNum vhValor">${valor}</span></div>`;
     }).join('');
-    const total=`<div class="vhFila vhTotal" role="row"><span role="cell">Total</span><span role="cell"></span><span role="cell"></span><span role="cell" class="vhNum">${m.buscando ? '—' : escHtml(euros(m.totalC))}</span><span role="cell" class="vhApagado">Tu libro: ${escHtml(m.libroTxt)}</span></div>`;
+    const total=`<div class="vhFila vhTotal" role="row"><span role="cell">Total</span><span role="cell"></span><span role="cell"></span><span role="cell" class="vhNum">${m.buscando ? '—' : escHtml(euros(m.totalC))}</span></div>`;
     return `<div class="vhTablaWrap"><div class="vhTabla" role="table" aria-label="Valor de hoy, activo por activo">${cab}${filas}${total}</div></div><p class="vhPie">${escHtml(PIE)}</p>`;
   }
   function htmlMovil(m){
     const lista=m.filas.map(f=>{
-      const ck=celdaCheck(f, true);
       const u=f.unidades ? `${unidadesTxt(f.unidades)} ${f.clave==='btc' ? 'BTC' : f.clave==='gold' ? 'unidades' : 'participaciones'}` : 'Sin unidades en tu libro';
-      const precio=m.buscando ? 'Buscando…' : f.precio ? f.precio.txt : (f.unidades ? textoSinPrecio(f) : '');
+      // con aviso, la línea del precio dice sólo que va con el valor del libro (el tablero MovilNoCuadra2)
+      const precio=m.buscando ? 'Buscando…' : f.aviso ? 'Va con el valor de tu libro' : f.precio ? f.precio.txt : (f.unidades ? textoSinPrecio(f) : '');
       return `<li class="vhMovilActivo" data-vh-activo="${f.clave}"><div class="vhMovilCabeza"><span class="vhNombre">${escHtml(nombreCorto(f))}</span><span class="vhNum">${m.buscando ? '—' : escHtml(euros(f.valorC))}</span></div>`
-        +`<div class="vhLinea">${escHtml(u)}</div>`+(precio ? `<div class="vhLinea">${escHtml(precio)}${!m.buscando && f.usaLibro && f.unidades ? ' · va con el de tu libro' : ''}</div>` : '')
-        +`<div class="vhCheck ${ck.buscando?'buscando':ck.tipo}"><span class="vhPunto ${ck.buscando?'neutro':ck.tipo}" aria-hidden="true"></span>${textosCheck(ck)}</div></li>`;
+        +htmlDif(f, 'div')
+        +`<div class="vhLinea">${escHtml(u)}</div>`+(precio ? `<div class="vhLinea">${escHtml(precio)}${!m.buscando && f.usaLibro && f.unidades && !f.aviso ? ' · va con el de tu libro' : ''}</div>` : '')
+        +(f.aviso ? `<div class="vhCheck aviso"><span class="vhPunto aviso" aria-hidden="true"></span><span>${escHtml(f.avisoMovil)}</span></div>` : '')
+        +'</li>';
     }).join('');
     return `<button type="button" class="vhVolver" data-vh-volver><span aria-hidden="true">‹</span> Hoy</button>`
       +`<h2 id="vhMovilTitulo">Valor de hoy</h2>`
