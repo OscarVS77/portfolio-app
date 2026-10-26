@@ -13654,9 +13654,12 @@ function renderTwoLineBenchmarkChart(seriesA, seriesB, labelA, labelB, cfg){
   });
 
   // ── la comprobación ─────────────────────────────────────────────────────
+  // ficha #95 bis (maqueta aprobada por Óscar el 26/10/2026) · la fecha de las participaciones (columna Q): si falta o
+  // no es la de la valoración, las unidades no son de fiar. Desde la v175.98 la comprobación ya no se ve, así que es un
+  // AVISO, como unas participaciones que no cuadran: el activo va con su valor del libro y se dice qué revisar.
   function sinComprobarQ(a, a4){
-    if(!a.q) return {tipo:'neutro', txt:'Sin comprobar: tu libro no dice de qué fecha son las participaciones.'};
-    if(a.q!==a4) return {tipo:'neutro', txt:`Sin comprobar: las participaciones son del ${dm(a.q)} y la valoración del ${dm(a4)}.`};
+    if(!a.q) return {tipo:'aviso', causa:'fecha', q:null, txt:'Falta la fecha de las participaciones.'};
+    if(a.q!==a4) return {tipo:'aviso', causa:'fecha', q:a.q, txt:`Las participaciones son del ${dm(a.q)} y la valoración del ${dm(a4)}.`};
     return null;
   }
   // QUE NO AFIRME LO QUE NO SE SABE (revisión de Óscar del 18/10/2026): «no hay» sólo cuando la Edge
@@ -13726,11 +13729,19 @@ function renderTwoLineBenchmarkChart(seriesA, seriesB, labelA, labelB, cfg){
   // Los fondos y el plan, «las participaciones»; el oro y Bitcoin, «las unidades».
   function queRevisar(f){ return f.clave==='gold' || f.clave==='btc' ? 'las unidades' : 'las participaciones'; }
   function textoAviso(f, a4){
-    const u=unidadesTxt(f.unidades)+(f.clave==='btc' ? ' BTC' : '');
     const q=queRevisar(f);
+    if(f.check.causa==='fecha') return f.check.q
+      ? `La fecha de ${q} de tu Excel (${dm(f.check.q)}) no es la de tu valoración (${dm(a4)}). Revisa ${q} y su fecha.`
+      : `Falta la fecha de ${q} de tu Excel; tiene que ser la de tu valoración (${dm(a4)}). Revisa ${q} y su fecha.`;
+    const u=unidadesTxt(f.unidades)+(f.clave==='btc' ? ' BTC' : '');
     return `${q.charAt(0).toUpperCase()+q.slice(1)} de tu Excel (${u}) no dan el valor que pusiste el ${dm(a4)} (${fmtMoney(f.libro)}). Revisa ${q}.`;
   }
-  function textoAvisoMovil(f, a4){ return `Revisa ${queRevisar(f)} en tu Excel: no dan el valor que pusiste el ${dm(a4)}.`; }
+  function textoAvisoMovil(f, a4){
+    if(f.check.causa==='fecha') return f.check.q
+      ? `Revisa ${queRevisar(f)} en tu Excel: su fecha (${dm(f.check.q)}) no es la de tu valoración (${dm(a4)}).`
+      : `Revisa ${queRevisar(f)} en tu Excel: falta su fecha, que es la de tu valoración (${dm(a4)}).`;
+    return `Revisa ${queRevisar(f)} en tu Excel: no dan el valor que pusiste el ${dm(a4)}.`;
+  }
 
   // ── el modelo: todo lo que se pinta, calculado una vez ──────────────────
   function nombreCorto(f){ return f.clave==='btc' ? 'Bitcoin' : f.clave==='gold' ? 'Oro' : f.nombre; }
@@ -13783,6 +13794,9 @@ function renderTwoLineBenchmarkChart(seriesA, seriesB, labelA, labelB, cfg){
       }
       // ficha #95 · la consulta que explica por qué va con el valor del libro (sólo si la hay)
       if(a.clave!=='btc' && (f.motivo==='sinPrecio' || f.motivo==='sinPosterior')){ const c=consultaDe(ed); if(c) f.consulta=c; }
+      // ficha #95 bis · la fecha de las participaciones no necesita a la Edge: se mira siempre que haya unidades,
+      // también sin sesión o con la Edge fallando, y manda sobre lo demás
+      if(a.unidades){ const fq=sinComprobarQ(a, libro.a4); if(fq) f.check=fq; }
       // Si la comprobación dice que las unidades no son de fiar, la cifra no puede usarlas: el activo
       // va con su valor del libro hasta que se revisen (revisión de Óscar de la página de verificación, §12).
       if(f.check && f.check.tipo==='aviso'){ f.aviso=textoAviso(f, libro.a4); f.avisoMovil=textoAvisoMovil(f, libro.a4); f.usaLibro=true; }
@@ -13811,9 +13825,12 @@ function renderTwoLineBenchmarkChart(seriesA, seriesB, labelA, labelB, cfg){
       // el plan, sus participaciones, y el oro y Bitcoin, sus unidades
       const de=fs=>{ const n=fs.map(f=>f.clave==='gold' ? 'del oro' : f.clave==='pension' ? 'del plan' : `de ${nombreCorto(f)}`);
         return n.length<2 ? n[0] : n.slice(0,-1).join(', ')+' y '+n[n.length-1]; };
-      const vl=avisos.filter(f=>f.clave!=='gold' && f.clave!=='btc'), rg=avisos.filter(f=>f.clave==='gold' || f.clave==='btc');
-      const partes=[vl.length ? `las participaciones ${de(vl)}` : '', rg.length ? `las unidades ${de(rg)}` : ''].filter(Boolean);
-      m.notas.push({tipo:'aviso', txt:`Revisa ${partes.join(' y ')} en tu Excel.`});
+      const partesDe=fs=>{ const vl=fs.filter(f=>f.clave!=='gold' && f.clave!=='btc'), rg=fs.filter(f=>f.clave==='gold' || f.clave==='btc');
+        return [vl.length ? `las participaciones ${de(vl)}` : '', rg.length ? `las unidades ${de(rg)}` : ''].filter(Boolean); };
+      // ficha #95 bis · una nota para lo que no cuadra y otra para la fecha: «Revisa la fecha de las participaciones de…»
+      const cuadre=avisos.filter(f=>f.check.causa!=='fecha'), fecha=avisos.filter(f=>f.check.causa==='fecha');
+      if(cuadre.length) m.notas.push({tipo:'aviso', txt:`Revisa ${partesDe(cuadre).join(' y ')} en tu Excel.`});
+      if(fecha.length) m.notas.push({tipo:'aviso', txt:`Revisa la fecha de ${partesDe(fecha).join(' y de ')} en tu Excel.`});
     }
     // un activo con aviso ya dice arriba por qué va con el valor del libro
     const grupo=(mot, uno, varios)=>{ const fs=filas.filter(f=>f.motivo===mot && !f.aviso); if(fs.length) m.notas.push({tipo:'neutro', txt:`${enumera(fs)} ${fs.length===1?'va':'van'} con el valor de tu libro: ${fs.length===1?uno:(varios||uno)}`}); };
