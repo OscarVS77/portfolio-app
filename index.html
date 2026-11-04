@@ -4928,6 +4928,10 @@ let importedData = null;
 // subida salen de aquí: no de la copia guardada —que puede ser de otra pestaña o de
 // un guardado que falló— ni de `XLSX.write`, que pierde tablas y formatos.
 let importedBuffer = null;
+// H1 y H3 (auditoría de Codex, 02/11/2026) · la GENERACIÓN del libro en pantalla: sube cada vez que se aplica
+// uno. Subir o bajar de la nube la captura al empezar y la comprueba al terminar: si cambió por el camino, el
+// libro de ahora no es el de entonces.
+let generacionLibro = 0;
 let lastWorkbookValidationIssues = [];
 // v175.8: incidencias del último INTENTO de importación rechazado. Separado de
 // la validación del libro activo: revalidar el Excel vigente no debe borrar
@@ -6153,6 +6157,7 @@ function applyWorkbookAfterRead(fileName, fromCache=false, candidate=importedWor
   importedWorkbook = candidate;
   importedData = {fileName:fileName || 'Excel importado'};
   importedBuffer = llegada.buffer || null;
+  generacionLibro++;
   importedData.tipo = llegada.tipo || ''; importedData.fecha = llegada.fecha || '';
   lastRejectedImport = null; // v175.8: una importación válida limpia el rechazo anterior
   // v175.92 · ficha #67 · EL BENCHMARK ES DEL LIBRO QUE LO PIDIÓ. Al aceptar un libro se
@@ -11333,6 +11338,7 @@ async function cloudRequireReady(){
   return true;
 }
 async function cloudSaveWorkbook(){
+  const generacion = generacionLibro;
   if(!(await cloudRequireReady())) return;
   try{
     const buffer = importedWorkbook ? importedBuffer : null;   // v175.92 · ficha #67 · sólo sube el libro en pantalla
@@ -11342,6 +11348,7 @@ async function cloudSaveWorkbook(){
       .from(PORTFOLIO_SUPABASE_CONFIG.bucket)
       .upload(cloudFilePath(), blob, {upsert:true, contentType:blob.type});
     if(error) throw error;
+    if(generacion !== generacionLibro) return;   // H1 · se importó otro libro mientras subía: éste sigue sin guardar
     const nowIso = new Date().toISOString();
     localStorage.setItem('portfolioOscar:lastCloudSync:v1', nowIso);
     localStorage.setItem('portfolioOscar:lastCloudUpload:v1', nowIso);
@@ -11357,6 +11364,7 @@ async function cloudSaveWorkbook(){
   }
 }
 async function cloudLoadWorkbook(opciones={}){
+  const generacion = generacionLibro;
   if(!(await cloudRequireReady())) return;
   try{
     const { data: signed, error: signErr } = await portfolioSupabase.storage
@@ -11367,6 +11375,7 @@ async function cloudLoadWorkbook(opciones={}){
     const resp = await fetch(bustUrl, {cache:'no-store'});
     if(!resp.ok){ const e=new Error('Descarga nube HTTP ' + resp.status); e.status=resp.status; throw e; }
     const buffer = await resp.arrayBuffer();
+    if(generacion !== generacionLibro) return;   // H3 · se aplicó otro libro mientras bajaba: la descarga se descarta
     const candidate = XLSX.read(buffer, {type:'array', cellDates:false, cellFormula:true, cellStyles:false});
     const accepted = applyWorkbookAfterRead?.(PORTFOLIO_SUPABASE_CONFIG.fileName, true, candidate, {buffer, tipo:'Cargado desde nube', fecha:new Date().toISOString()});
     if(!accepted){ updateCloudAudit('error'); return; }   // el rechazo ya tiene su aviso
@@ -13485,6 +13494,9 @@ function renderTwoLineBenchmarkChart(seriesA, seriesB, labelA, labelB, cfg){
   const dm=d=>d ? `${d.slice(8,10)}/${d.slice(5,7)}` : '';
   const dmy=d=>d ? `${d.slice(8,10)}/${d.slice(5,7)}/${d.slice(0,4)}` : '';
   function hoyLocal(){ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+  // H2 (auditoría de Codex, 02/11/2026) · el día local de un instante, y cuánto vale un precio de Bitcoin
+  function diaDe(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+  const VIGENCIA_BTC_MS=5*60*1000;
   function hhmm(d){ try{ return d.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}); }catch(_){ return ''; } }
   function dia(v){ if(v==null || String(v).trim()==='') return null; return benchmarkDayFromDate(isoDateFromAny(v)) || null; }
   function listaDias(ds){ const t=ds.map(dm); return t.length<2 ? t[0] : t.slice(0,-1).join(', del ')+' ni del '+t[t.length-1]; }
@@ -13770,8 +13782,9 @@ function renderTwoLineBenchmarkChart(seriesA, seriesB, labelA, labelB, cfg){
         f.check={tipo:'neutro', txt:'Sin unidades en tu libro'};
       }else if(a.clave==='btc'){
         f.check=resp ? compruebaRango(a, ed && ed.dia, libro.a4, 'btc', ed) : sinDatos();
-        if(btc.precio){
-          f.precio={txt:`Precio a las ${hhmm(btc.precio.hora)}: ${fmtMoney(btc.precio.valor)}`, fecha:hoyLocal(), hora:hhmm(btc.precio.hora)};
+        // H2 · el precio sólo vale si es de hoy y de hace 5 minutos o menos; su fecha es la suya, no la de hoy
+        if(btc.precio && diaDe(btc.precio.hora)===hoyLocal() && Date.now()-btc.precio.hora.getTime()<=VIGENCIA_BTC_MS){
+          f.precio={txt:`Precio a las ${hhmm(btc.precio.hora)}: ${fmtMoney(btc.precio.valor)}`, fecha:diaDe(btc.precio.hora), hora:hhmm(btc.precio.hora)};
           f.valorC=centimos(a.unidades, btc.precio.texto);
         }else{ f.usaLibro=true; f.motivo='noTraido'; }   // Coinbase no ha contestado: no se ha podido traer
       }else if(a.clave==='gold'){
