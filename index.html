@@ -1766,6 +1766,12 @@ html{
    libro, el título de página como texto, la ventana única y «Has salido» son
    marcado nuevo del primer pintado, y sus estilos viven en el bloque del cuerpo.
 
+   REGENERADA EN LA v175.101 (frases cortadas, maqueta del 04/11/2026): el cuerpo reparte las líneas
+   (text-wrap-style:balance) y el separador de frases y su elemento de bloque (.fraseCorte, .fraseBloque)
+   viven en el bloque del cuerpo. Cosechada con Coinbase contestado por la barrera, como lo mide
+   verify_critica (la cosecha lo cortaba, y desde la v175.100 eso cosechaba el punto del precio en «mal»). Y otra vez
+   en la misma versión, al subir el alto fijo del marco del Benchmark (469 → 506 en su tramo).
+
    Y UN AVISO PARA QUIEN EDITE ESTE COMENTARIO: aquí no se escribe ningún nombre
    de etiqueta entre ángulos. `validate.py` cuenta el balance de etiquetas sobre
    el archivo ENTERO, comentarios de CSS incluidos, y un nombre suelto lo
@@ -2043,7 +2049,7 @@ body:before{content:""; position:fixed; inset:0; pointer-events:none; background
 #benchmark #benchmarkPanelStable{padding-bottom:17px;}
 }
 @media (min-width: 861px) and (max-width: 1500px){
-#benchmark #benchmarkPanelStable{--eje-bench-marco:469px;}
+#benchmark #benchmarkPanelStable{--eje-bench-marco:506px;}
 }
 #benchmark #benchmarkPanelStable #benchmarkChart{min-height:280px!important; height:280px!important;}
 #benchmark #benchmarkPanelStable #benchmarkChart .chartEmpty{display:flex!important; align-items:center!important; justify-content:center!important; height:100%!important; min-height:280px!important; padding:24px!important; color:var(--muted)!important; text-align:center!important; font-size:13px!important;}
@@ -2394,6 +2400,9 @@ html[data-arranque="recuperando"] .edoVac{display:none;}
 @media (max-width: 760px){
 .salidoCard .btn{align-self:stretch; height:46px!important; min-height:46px!important;}
 }
+body{text-wrap-style:balance;}
+.fraseCorte{display:block; height:2px;}
+.fraseBloque{display:block;}
 /* ══════════════════ HOJA CRÍTICA · FIN ══════════════════ */
 </style>
 
@@ -8248,10 +8257,12 @@ updateDashboard = function(){
 }/* v175.90 · #69 */@media(min-width:761px){#benchmark #benchmarkPanelStable{padding-bottom:17px}}
 /* v175.90 · #69 · la altura justa del marco por tramo de anchura: la del contenido más alto de las siete
    vistas —sin pintar, pintadas y con error de carga, en los dos motores— más 17 de relleno y 1 del borde
-   del panel. Así no salta al pintar ni al cambiar de vista (v140) y el aire de debajo es 18 o más. */
-@media(min-width:761px) and (max-width:860px){#benchmark #benchmarkPanelStable{--eje-bench-marco:515px}}
-@media(min-width:861px) and (max-width:1500px){#benchmark #benchmarkPanelStable{--eje-bench-marco:469px}}
-@media(min-width:1501px){#benchmark #benchmarkPanelStable{--eje-bench-marco:460px}}#benchmark #benchmarkPanelStable #benchmarkChart{
+   del panel. Así no salta al pintar ni al cambiar de vista (v140) y el aire de debajo es 18 o más.
+   v175.101 · con las frases cortadas (cada frase en su línea) el contenido más alto crece: 515→551, 469→506 y
+   460→489, medidos en las 62 anchuras de verify_ejes y en los dos motores (550,86 · 505,06 · 488,27). */
+@media(min-width:761px) and (max-width:860px){#benchmark #benchmarkPanelStable{--eje-bench-marco:551px}}
+@media(min-width:861px) and (max-width:1500px){#benchmark #benchmarkPanelStable{--eje-bench-marco:506px}}
+@media(min-width:1501px){#benchmark #benchmarkPanelStable{--eje-bench-marco:489px}}#benchmark #benchmarkPanelStable #benchmarkChart{
   min-height:280px!important;
   height:280px!important;
 }#benchmark #benchmarkPanelStable #benchmarkChart .chartEmpty{
@@ -10450,6 +10461,21 @@ html.vhMovilAbierto, html.vhMovilAbierto body{overflow:hidden!important;}
    sin ninguna de las dos (0,00 €), gris. En el iPhone, a la derecha, bajo el valor. */
 .vhDifActivo{font-size:13px; font-weight:620; color:var(--muted); font-variant-numeric:tabular-nums;}
 .vhMovilActivo .vhDifActivo{margin-top:2px; text-align:right;}
+/* FRASES CORTADAS (maqueta aprobada por Óscar el 04/11/2026) · un único mecanismo para toda la web; el guion
+   «frases», al final del último guion del archivo, pone lo que estas reglas pintan.
+   · REPARTO: text-wrap-style:balance desde body, heredado. Sólo el estilo, no el atajo text-wrap: un elemento
+     con su propio white-space (nowrap, pre) sigue como estaba.
+   · UNA FRASE POR LÍNEA: .fraseCorte es el separador vacío que el guion mete entre dos frases. Un bloque de
+     2 px: la frase siguiente empieza en su línea, con el aire de la maqueta, y el textContent no cambia.
+   · CABECERAS DE TABLA: .thEntera la pone el guion sólo si la tabla, con sus cabeceras en una línea y las
+     columnas ensanchadas lo justo, sigue cabiendo en su caja; si no cabe, la tabla se queda como está. */
+body{text-wrap-style:balance;}
+.fraseCorte{display:block; height:2px;}
+/* un elemento en línea que va solo en su renglón y lleva dentro un corte de frase pasa a bloque: nada se mueve
+   (ya iba solo) y así el separador queda en un bloque. Dentro de una línea, los dos motores dejan de repartir. */
+.fraseBloque{display:block;}
+table.thEntera{table-layout:auto!important;}
+table.thEntera th{white-space:nowrap!important;}
 </style>
 
 
@@ -14303,6 +14329,180 @@ function renderTwoLineBenchmarkChart(seriesA, seriesB, labelA, labelB, cfg){
   function enganchar(){ envolver('updateDashboard'); envolver('renderDashboardScope'); ensureHints(); }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', enganchar);
   else enganchar();
+})();
+
+/* ══ FRASES (maqueta aprobada por Óscar el 04/11/2026) ══════════════════════════════════════════════
+   Un solo mecanismo, central, para toda la web: no se toca el texto de ninguna sede.
+   1 · UNA FRASE POR LÍNEA. Entre dos frases de un mismo bloque se mete un span .fraseCorte, un
+       bloque vacío (su CSS, al final del bloque de estilo del cuerpo): la frase siguiente empieza en su línea y el
+       textContent del bloque no cambia —el espacio entre las dos se queda donde estaba—. Fin de frase:
+       . ? ! —o seguido de » o ”—, espacio, y mayúscula, ¿ o «. Por eso no parte cifras (18.947,09),
+       direcciones (portfolio.oscarvisa.com) ni una abreviatura seguida de minúscula (Rent. sobre coste).
+       No toca títulos, cabeceras, celdas, botones ni rótulos (NO_SE_PARTE) —salvo las ayudas «?», que se
+       separan aunque vayan dentro de una tarjeta pulsable—, ni lo que va en una línea (nowrap), ni el texto
+       suelto dentro de un flex o un grid, donde cada frase sería un elemento más. Si el corte cae dentro de
+       un elemento en línea que va solo en su renglón, ese elemento pasa a bloque (.fraseBloque): con el
+       separador dentro de una línea los dos motores dejan de repartir el párrafo.
+   2 · EL REPARTO lo pone el CSS (balance desde body), también en cada frase separada.
+   3 · UNA OPERACIÓN CON CIFRAS NO SE PARTE: los espacios alrededor del signo (− ÷ × + =) entre dos cifras
+       pasan a ser espacios duros. Es lo único que cambia el textContent, y sólo en esos espacios.
+   4 · LAS CABECERAS DE TABLA NO SE PARTEN si la tabla cabe así en su caja (.thEntera, que deja las columnas
+       ensancharse lo justo); si no cabe, la tabla se queda como está. Se vuelve a mirar cuando la caja
+       cambia de ancho —también al aparecer— o cuando cambia lo que hay dentro de la tabla.
+   CUÁNDO: una pasada al llegar aquí y un MutationObserver sobre el documento, que corre en la microtarea
+   siguiente a cada escritura de la web, antes de pintar. Lo que escribe él mismo lo descarta
+   (takeRecords). Ningún escuchador en ningún botón. */
+(function(){
+  if(typeof MutationObserver!=='function') return;
+  const NO_SE_PARTE='h1,h2,h3,h4,h5,h6,th,td,button,label,legend,caption,summary,option,select,textarea,input,'+
+    'svg,script,style,code,pre,[role="button"],[contenteditable="true"],.benchmarkTooltipFloating';
+  const NO_SE_TOCA='svg,script,style,textarea,input,code,pre,[contenteditable="true"]';
+  const FIN=/[.?!][»”]?\s+(?=[A-ZÁÉÍÓÚÜÑ¿«])/g;
+  const PUEDE_ACABAR=/[.?!][»”]?(\s|$)/;
+  const OPERACION=/(\d(?:\u00a0[€%])?) ([−÷×+=]) (?=\d)/g;
+  const enLinea=d=>d==='inline' || d==='contents';
+  const cs=e=>getComputedStyle(e);
+
+  function contenedor(n){
+    let c=n && (n.nodeType===1 ? n : n.parentElement);
+    while(c && c!==document.body && enLinea(cs(c).display)) c=c.parentElement;
+    return c;
+  }
+  function separador(){ const s=document.createElement('span'); s.className='fraseCorte'; return s; }
+  function enUnaLinea(e){ const c=cs(e); return /nowrap|pre/.test(c.whiteSpace) || c.textWrapMode==='nowrap'; }
+
+  // 1 · las frases de un bloque, cada una en su línea. ES REVERSIBLE, y tiene que serlo: partir una frase
+  // parte su nodo de texto en dos, y la web tiene al menos un sitio (la nota del XIRR) que guarda el nodo y
+  // escribe en él la frase entera. Por eso cada nodo partido queda apuntado con sus trozos (`piezas`), cada
+  // pasada sobre un bloque deshace antes lo que puso, y si la web ha reescrito el nodo (`sucio`), sus trozos
+  // viejos se tiran en vez de volver a juntarlos: si no, la frase saldría dos veces.
+  const piezas=new WeakMap(), sucio=new WeakSet();
+  function flujo(C, alTexto, alSeparador){
+    (function baja(n){
+      for(const k of [...n.childNodes]){
+        if(k.nodeType===3){ alTexto(k); continue; }
+        if(k.nodeType!==1) continue;
+        if(k.classList.contains('fraseCorte')){ alSeparador(k); continue; }
+        // lo que no es texto en línea corta el recorrido: ahí ya hay un salto, o no se toca
+        if(k.matches(NO_SE_PARTE) || !enLinea(cs(k).display)){ alTexto(null); continue; }
+        baja(k);
+      }
+    })(C);
+  }
+  function deshace(C){
+    const seps=[], originales=[];
+    flujo(C, t=>{ if(t && piezas.has(t)) originales.push(t); }, s=>seps.push(s));
+    seps.forEach(s=>s.remove());
+    for(const o of originales){
+      const restos=piezas.get(o); piezas.delete(o);
+      if(!sucio.has(o)) o.data+=restos.filter(r=>r.isConnected).map(r=>r.data).join('');
+      sucio.delete(o);
+      restos.forEach(r=>r.remove());
+    }
+  }
+  function soloEnSuRenglon(X){
+    const corte=n=>!n || (n.nodeType===1 && (n.tagName==='BR' || !enLinea(cs(n).display)));
+    let a=X.previousSibling; while(a && a.nodeType===3 && !/\S/.test(a.data)) a=a.previousSibling;
+    let b=X.nextSibling; while(b && b.nodeType===3 && !/\S/.test(b.data)) b=b.nextSibling;
+    return corte(a) && corte(b);
+  }
+  function partir(C){
+    if(!C || !C.isConnected) return;
+    deshace(C);
+    if((C.closest(NO_SE_PARTE) && !C.closest('.hintBody')) || /flex|grid/.test(cs(C).display) || enUnaLinea(C)) return;
+    const trozos=[]; let s='';
+    flujo(C, t=>{ if(t){ trozos.push([t, s.length]); s+=t.data; } else s+='\u0000'; }, ()=>{ s+='\u0000'; });
+    const puntos=[]; let m;
+    FIN.lastIndex=0;
+    while((m=FIN.exec(s))) puntos.push(m.index+m[0].length);
+    for(let i=puntos.length-1; i>=0; i--){
+      const p=puntos[i];
+      let j=trozos.length-1;
+      while(j>=0 && trozos[j][1]>p) j--;
+      if(j<0) continue;
+      const [t, ini]=trozos[j];
+      if(p-ini>=t.data.length || !t.parentNode || enUnaLinea(t.parentElement)) continue;
+      let ante;
+      if(p>ini){
+        ante=t.splitText(p-ini);
+        if(!piezas.has(t)) piezas.set(t, []);
+        piezas.get(t).unshift(ante);                 // de atrás adelante: así quedan en el orden del texto
+      }
+      else{ ante=t; while(ante.parentNode!==C && ante.parentNode.firstChild===ante) ante=ante.parentNode; }
+      const cadena=[];
+      for(let X=ante.parentNode; X && X!==C; X=X.parentNode) cadena.unshift(X);
+      for(const X of cadena){ if(!X.classList.contains('fraseBloque') && !soloEnSuRenglon(X)) break; X.classList.add('fraseBloque'); }
+      ante.parentNode.insertBefore(separador(), ante);
+    }
+    // un elemento que pasó a bloque y ya no lleva ningún corte vuelve a ser como era
+    if(C.classList.contains('fraseBloque') && !C.querySelector('.fraseCorte')) C.classList.remove('fraseBloque');
+  }
+  // 3 · una operación con cifras, junta
+  function juntar(t){
+    if(!/[−÷×+=]/.test(t.data) || !t.parentElement || t.parentElement.closest(NO_SE_TOCA)) return;
+    const nuevo=t.data.replace(OPERACION, '$1\u00a0$2\u00a0');
+    if(nuevo!==t.data) t.data=nuevo;
+  }
+  // 4 · las cabeceras de una tabla, en una línea si cabe
+  const anchos=new WeakMap();
+  const vigila=typeof ResizeObserver==='function' ? new ResizeObserver(entradas=>{
+    for(const e of entradas){
+      const w=Math.round(e.contentRect.width);
+      if(anchos.get(e.target)===w) continue;
+      anchos.set(e.target, w);
+      const t=e.target.querySelector(':scope > table'); if(t) cabeceras(t);
+    }
+  }) : null;
+  function lineas(h){ const r=document.createRange(); r.selectNodeContents(h); const tops=new Set();
+    for(const x of r.getClientRects()) if(x.width>0) tops.add(Math.round(x.top)); return tops.size; }
+  function cabeceras(t){
+    const caja=t.parentElement;
+    if(!caja || !t.isConnected) return;
+    if(vigila && !anchos.has(caja)){ anchos.set(caja, -1); vigila.observe(caja); }
+    if(!t.getClientRects().length) return;           // no se ve: se mira al aparecer, cuando la caja cambia de ancho
+    t.classList.remove('thEntera');
+    if(![...t.querySelectorAll('th')].some(h=>lineas(h)>1)) return;
+    t.classList.add('thEntera');
+    const c=cs(caja), hueco=caja.clientWidth-parseFloat(c.paddingLeft)-parseFloat(c.paddingRight);
+    if(t.getBoundingClientRect().width>hueco+0.5 || caja.scrollWidth>caja.clientWidth+0.5) t.classList.remove('thEntera');
+  }
+
+  function recoge(raiz, textos, bloques, tablas){
+    if(raiz.nodeType===3){ textos.add(raiz); return; }
+    if(raiz.nodeType!==1 || raiz.closest(NO_SE_TOCA)) return;
+    const w=document.createTreeWalker(raiz, NodeFilter.SHOW_ELEMENT|NodeFilter.SHOW_TEXT, {acceptNode:n=>
+      n.nodeType===3 ? NodeFilter.FILTER_ACCEPT : (n.matches(NO_SE_TOCA) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_SKIP)});
+    for(let t=w.nextNode(); t; t=w.nextNode()) textos.add(t);
+    if(raiz.tagName==='TABLE') tablas.add(raiz);
+    raiz.querySelectorAll('table').forEach(t=>tablas.add(t));
+  }
+  function aplica(textos, bloques, tablas){
+    for(const t of textos){
+      if(!t.isConnected) continue;
+      juntar(t);
+      if(PUEDE_ACABAR.test(t.data)) bloques.add(contenedor(t));
+    }
+    for(const C of bloques) partir(C);
+    for(const t of tablas) cabeceras(t);
+  }
+  const mo=new MutationObserver(registros=>{
+    const textos=new Set(), bloques=new Set(), tablas=new Set();
+    for(const r of registros){
+      const objetivo=r.target.nodeType===1 ? r.target : r.target.parentElement;
+      if(!objetivo || !objetivo.isConnected) continue;
+      if(r.type==='characterData'){ textos.add(r.target); if(piezas.has(r.target)) sucio.add(r.target); }
+      else r.addedNodes.forEach(n=>recoge(n, textos, bloques, tablas));
+      bloques.add(contenedor(objetivo));
+      const t=objetivo.closest('table'); if(t) tablas.add(t);
+    }
+    aplica(textos, bloques, tablas);
+    mo.takeRecords();
+  });
+  const textos=new Set(), bloques=new Set(), tablas=new Set();
+  recoge(document.body, textos, bloques, tablas);
+  aplica(textos, bloques, tablas);
+  mo.observe(document.body, {childList:true, subtree:true, characterData:true});
+  window.__frases={partir, cabeceras};
 })();
 </script>
 
