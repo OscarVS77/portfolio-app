@@ -13582,6 +13582,22 @@ function renderTwoLineBenchmarkChart(seriesA, seriesB, labelA, labelB, cfg){
     return (n+div/2n)/div;
   }
   const centimosLibro=v=>BigInt(Math.round(Number(v)*100));
+  // v175.102 · ¿Dan las participaciones × el VL el valor del libro? Al céntimo, como siempre; y si el VL de la fuente trae más de
+  // 4 decimales (hoy, sólo el plan), con una diferencia de hasta participaciones × 0,00005 € + 0,005 €, sin coma
+  // flotante. Medido el 11/11/2026: MyInvestor valora con el VL a 4 decimales y la fuente del plan da 5; con 164,58
+  // participaciones, 19,7644 da 3.252,82 € y 19,76442 da 3.252,83 €, un céntimo que avisaba en falso. Los fondos
+  // (EODHD, 4 decimales) siguen al céntimo: con el margen, 0,001 participaciones de más en MSCI World no avisaban.
+  function cuadraVl(u, vl, libroC){
+    const x=decimal(u), y=decimal(vl);
+    if(!x || !y) return false;
+    let yn=y.n, ye=y.e;
+    while(ye>0 && yn%10n===0n){ yn/=10n; ye--; }   // «19.753000» de VDOS son 3 decimales, no 6
+    if(ye<=4) return centimos(u, vl)===libroC;
+    const e=x.e+ye, s=Math.max(e, x.e+5, 3), p=n=>10n**BigInt(n);
+    const prod=x.n*yn*p(s-e), lib=libroC*p(s-2);
+    const tol=x.n*5n*p(s-x.e-5)+5n*p(s-3);
+    return (prod>lib ? prod-lib : lib-prod)<=tol;
+  }
   const euros=c=>fmtMoney(Number(c)/100);
   function unidadesTxt(u){ return Number(u).toLocaleString('es-ES',{maximumFractionDigits:8}); }
   function decimalesDe(s, min, max){ const m=String(s).match(/\.(\d+)$/); return Math.min(max, Math.max(min, m ? m[1].length : 0)); }
@@ -13727,9 +13743,9 @@ function renderTwoLineBenchmarkChart(seriesA, seriesB, labelA, labelB, cfg){
     let cuadra=null; const faltan=[];
     for(const d of ventana){
       if(d.valor==null){ faltan.push(d.fecha); continue; }
-      if(!cuadra && centimos(a.unidades, d.valor)===libro) cuadra=d.fecha;
+      if(!cuadra && cuadraVl(a.unidades, d.valor, libro)) cuadra=d.fecha;
     }
-    if(cuadra) return {tipo:'ok', fecha:cuadra, txt:`Cuadra al céntimo con el valor del ${dm(cuadra)}`};
+    if(cuadra) return {tipo:'ok', fecha:cuadra, txt:`Cuadra con el valor del ${dm(cuadra)}`};
     // el hueco es de la fuente, no de tu libro (revisión de Óscar de la página de verificación, §12)
     if(faltan.length){
       const c=consultaDe(ed);
